@@ -9,7 +9,7 @@
 //  ---------------------------------------------------------------------------
 //
 //  © 2004-2007 nakamuxu
-//  © 2013-2019 1024jp
+//  © 2013-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -56,9 +56,16 @@ final class DocumentWindowController: NSWindowController {
         
         // -> It's set as false by default if the window controller was invoked from a storyboard.
         self.shouldCascadeWindows = true
-        // -> Do not use "document" for autosave name because somehow windows forget the size with that name (2018-09)
+        // -> Do not use "document" for autosave name because somehow windows forget the size with that name. (2018-09)
         self.windowFrameAutosaveName = "Document Window"
         
+        // set window size
+        let contentSize = NSSize(width: UserDefaults.standard[.windowWidth],
+                                 height: UserDefaults.standard[.windowHeight])
+        self.window!.setContentSize(contentSize)
+        (self.contentViewController as! WindowContentViewController).restoreAutosavingState()
+        
+        // set background alpha
         (self.window as? DocumentWindow)?.backgroundAlpha = UserDefaults.standard[.windowAlpha]
         
         // observe opacity setting change
@@ -70,12 +77,12 @@ final class DocumentWindowController: NSWindowController {
         // observe appearance setting change
         if #available(macOS 10.14, *) {
             self.appearanceModeObserver?.invalidate()
-            self.appearanceModeObserver = UserDefaults.standard.observe(key: .documentAppearance, options: [.initial, .new]) { [unowned self] change in
-                self.window?.appearance = {
+            self.appearanceModeObserver = UserDefaults.standard.observe(key: .documentAppearance, options: .initial) { [weak self] _ in
+                self?.window?.appearance = {
                     switch UserDefaults.standard[.documentAppearance] {
-                    case .default: return nil
-                    case .light:   return NSAppearance(named: .aqua)
-                    case .dark:    return NSAppearance(named: .darkAqua)
+                        case .default: return nil
+                        case .light:   return NSAppearance(named: .aqua)
+                        case .dark:    return NSAppearance(named: .darkAqua)
                     }
                 }()
             }
@@ -84,7 +91,7 @@ final class DocumentWindowController: NSWindowController {
     
     
     /// apply passed-in document instance to window
-    override var document: AnyObject? {
+    override unowned(unsafe) var document: AnyObject? {
         
         didSet {
             guard let document = document as? Document else { return }
@@ -92,7 +99,7 @@ final class DocumentWindowController: NSWindowController {
             self.toolbarController!.document = document
             self.contentViewController!.representedObject = document
             
-            // -> In case when the window was created as a restored window (the right side ones in the browsing mode)
+            // -> In case when the window was created as a restored window (the right side ones in the browsing mode).
             if document.isInViewingMode, let window = self.window as? DocumentWindow {
                 window.backgroundAlpha = 1.0
             }
@@ -135,10 +142,12 @@ extension DocumentWindowController: NSUserInterfaceValidations {
     func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {
         
         switch item.action {
-        case #selector(showOpacitySlider):
-            return self.window?.styleMask.contains(.fullScreen) == false
-        default:
-            return true
+            case #selector(showOpacitySlider):
+                return self.window?.styleMask.contains(.fullScreen) == false
+            case nil:
+                return false
+            default:
+                return true
         }
     }
     
@@ -148,7 +157,7 @@ extension DocumentWindowController: NSUserInterfaceValidations {
 
 extension DocumentWindowController: NSWindowDelegate {
     
-    /// MARK: Window Delegate
+    // MARK: Window Delegate
     
     func windowWillEnterFullScreen(_ notification: Notification) {
         

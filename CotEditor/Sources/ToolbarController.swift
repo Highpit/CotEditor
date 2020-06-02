@@ -31,14 +31,14 @@ extension LineEnding {
     init?(index: Int) {
         
         switch index {
-        case 0:
-            self = .lf
-        case 1:
-            self = .cr
-        case 2:
-            self = .crlf
-        default:
-            return nil
+            case 0:
+                self = .lf
+            case 1:
+                self = .cr
+            case 2:
+                self = .crlf
+            default:
+                return nil
         }
     }
     
@@ -46,14 +46,14 @@ extension LineEnding {
     var index: Int {
         
         switch self {
-        case .lf:
-            return 0
-        case .cr:
-            return 1
-        case .crlf:
-            return 2
-        default:
-            return -1
+            case .lf:
+                return 0
+            case .cr:
+                return 1
+            case .crlf:
+                return 2
+            default:
+                return -1
         }
     }
     
@@ -101,7 +101,7 @@ final class ToolbarController: NSObject {
     @IBOutlet private weak var syntaxPopupButton: NSPopUpButton?
     
     @IBOutlet private weak var shareToolbarItem: NSToolbarItem?
-
+    
     
     
     // MARK: -
@@ -123,7 +123,7 @@ final class ToolbarController: NSObject {
         self.buildSyntaxPopupButton()
         
         // setup Share toolbar item
-        // -> Share button action must be called on mouseDown.
+        // -> The Share button action must be called on `mouseDown`.
         (self.shareToolbarItem!.view as! NSButton).sendAction(on: .leftMouseDown)
         self.shareToolbarItem!.menuFormRepresentation = NSDocumentController.shared.standardShareMenuItem()
         

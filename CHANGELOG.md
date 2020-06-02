@@ -2,12 +2,384 @@
 Change Log
 ==========================
 
+3.9.0 (421)
+--------------------------
+
+### Improvements
+
+- Remove the default value of the snippet keybindings, that inserts `<br />` with `⇧↩`.
+- [trivial] Remove the snippet keybindings setting migration from CotEdtiror 2.x format and earlier.
+- [beta] Add missing localizations for French.
+
+
+### Fixes
+
+- Fix an issue in the character inspector where the inspector was not shown when the target character is hidden due to scroll.
+
+
+
+3.9.0-rc (419)
+--------------------------
+
+### Improvements
+
+- [trivial] Adjust the drawing position of the zoomed character in the character inspector.
+- [dev] Update the build environment to Xcode 11.5.
+- [beta.3] Improve reflecting the state of the Writing Direction toolbar button.
+- [beta.3] Adjust the width of toolbar items.
+- [beta] Add missing localizations for Simplified Chinese, Italien, and (a part of) Portuguese.
+
+
+### Fixes
+
+- Fix an issue where the application hung up by extending the selection with shortcut `⌥⇧→` when the character to select is a national flag emoji.
+- Fix an issue in the find panel's input fields where a regular expression pattern for Unicode code point was not highlighted properly when the hex contains uppercase letters.
+- Fix the help button in the advanced find options view.
+- [beta.4] Fix an issue where the font of the object character in the character inspector was wrongly applied.
+
+
+
+3.9.0-beta.4 (417)
+--------------------------
+
+### Improvements
+
+- [trivial] Omit surrogate pair code points in the character inspector if the character consists of multiple Unicode characters.
+
+
+### Fixes
+
+- [beta.3] Fix an issue where the encoding list view was not shown.
+- [beta.3] Fix an issue where the theme color was still not applied to the color of typed text in split view under some conditions.
+
+
+
+3.9.0-beta.3 (415)
+--------------------------
+
+### Improvements
+
+- Remove the text encoding option for opened documents; instead, the encoding is always detected automatically when opening an existing file.
+- Improve the encodings list edit view.
+- Adjust the width of toolbar items.
+- Remove “vertical orientation” from the selections of the Writing Direction toolbar button.
+- Update help content.
+- [trivial] Rename “Auto-Detect,” the option detecting the file encoding automatically, to “Automatic.”
+- [trivial] Update some labels in the Format pane.
+- [beta] Add menu item, toolbar item, and Touch Bar item to toggle visibility of indent guides in the current document.
+- [beta] Adjust the vertical position of the line ending symbol.
+- [beta] Make the indent guide drawing pixel-perfect.
+
+
+### Fixes
+
+- Fix an issue where the item “Automatic” (ex. Auto-Detect) was missing in the encoding selections in the open panel.
+- Fix an issue with multiple cursors where extra characters were deleted when performing forward delete with selection.
+- Fix an issue with multiple cursors where just a single UTF-16 character was deleted instead of the whole character when the character to delete consists of multiple UTF-16 characters.
+- Fix an issue with scripting with AppleScript/JXA where the `line range` command selected a wrong range when the line endings of the document are CRLF.
+- Fix an issue with scripting with AppleScript/JXA where selecting a single line by specifying a single integer argument to `line range` did not work.
+- Fix an issue where the theme color was not applied to the color of typed text in split view.
+- Fix missing localization.
+- [beta] Fix an issue in the editor where lines were initially wrapped at the wrong position when the text orientation is vertical and overscrolling is enabled.
+
+
+
+3.9.0-beta.2 (413)
+--------------------------
+
+### New Features
+
+- Add an option to draw indent guides.
+
+
+### Improvements
+
+- [beta] Adjust the vertical character position in line.
+
+
+### Fixes
+
+- [beta] Fix an issue where the current line highlight wrongly shifted when the overscrolling is set.
+- [beta] Fix an issue where line numbers at the bottom part were hidden when the overscrolling is set.
+- [beta] Fix an issue where syntax highlight was occasionally not updated when the text is edited.
+- [beta] Fix an issue where the current syntax highlight was not removed when selecting style “None.”
+- [beta] Fix an issue where the visibility of invisibles of opened documents cannot be changed.
+- [beta] Fix an issue where the previous current line highlights could remain.
+- [beta] Fix an issue where the previous page guide could remain after changing the page guide visibility.
+
+
+
+3.9.0-beta (411)
+--------------------------
+
+### New Features
+
+- Rewrite the invisible character drawing feature to draw alternative symbols more properly under various environments.
+- Display Unicode's general category in the character inspector.
+
+
+### Improvements
+
+- Adjust the text baseline to draw characters vertically center in lines.
+- Optimize the performance of “Replace All” with a large number of matches.
+- Improve the performance when pasting a huge text.
+- Update the Unicode block table to the latest Unicode 13.0.0.
+- Duplicate lines more intelligently.
+- Make borders of line number views and opacity sample tips more distinct in the high-contrast mode.
+- Adjust the visible area after unwrapping lines in RTL text mode.
+- [trivial] Display default values as the input field's placeholder for window size setting when empty.
+- [trivial] Make the identifier for document autosaving longer.
+- [dev] Update the build environment to Xcode 11.4 (Swift 5.2).
+- [dev] Replace YAML.framework with Yams.
+- [dev] Remove Carthage dependency.
+- [dev] Migrate codesign-specific build settings to .xcconfig (thanks to Yoshimasa Niwa!).
+
+
+### Fixes
+
+- Fix an issue where the application crashed when a hanging indent depth becomes larger than the editor area.
+- Fix an issue where the outline menu could select the wrong item while typing.
+- Fix an issue where the line numbers could be shifted when printing vertical text orientation documents.
+- Fix an issue where line endings could remain when deleting duplicate lines with multiple selections.
+- Fix an issue in the line number view where the line number of the selected line was not bolded under a specific condition.
+- Fix an issue in scripting with AppleScript/JXA where the application crashed by performing `string in ...` command.
+- Fix an issue in scripting with AppleScript/JXA where the contents of a document can rarely be overwritten with the contents of another document window under very specific conditions.
+- Fix an issue in the editor where lines were initially wrapped at the wrong position when the text orientation is vertical.
+- Fix an issue in the RTL text mode where the page guide disappeared when lines are unwrapped.
+- Fix an issue where the current line highlight did not update properly after changing some settings.
+- Fix an issue in the find panel's input fields where invisible control characters were drawn in the normal text color under specific conditions.
+- Fix an issue where the print font name in the Print pane was drawn in black even in the dark mode.
+- Fix an issue in the editor where the previous drawing could remain in a blank space after changing a display setting of the editor.
+
+
+
+3.8.12 (400)
+--------------------------
+
+### Improvements
+
+- Include the last line break to line count.
+- Update “Kotlin”, “JSON”, and “SVG” syntax styles.
+
+
+### Fixes
+
+- Fix an issue where the horizontal scrollbar didn't appear by unwrapping lines if the document consists of a single very long line.
+- Fix an issue where the application could crash after parsing syntax in a large document to highlight.
+- Fix an issue where the overscrolling was enabled only after window is resized.
+- Fix an issue where the current line was just partly highlighted under specific conditions.
+- Fix an issue in the line number view where the line number of the selected line was not bolded under a specific condition.
+- Fix an issue where the find panel could not display the result table when the find string is very long.
+
+
+
+3.8.11 (398)
+--------------------------
+
+### Improvements
+
+- Avoid showing the rainbow cursor while parsing URLs in the editor with large contents when the “link URLs in document” option is enabled.
+- Improve “Snakecase” and “Camelcase” commands to handle uppercase letters with accent properly.
+- Improve message for syntax highlighting progress.
+- Improve drawing performance and general stability.
+- [trivial] Tweak the visual notification for wrapping search.
+
+
+### Fixes
+
+- Fix an issue where a document window zombie appeared when the window was closed while detached character info popovers remain.
+- Fix an issue where a blank progress dialog for a long syntax highlighting could rarely remain when the document is updated while parsing.
+- Fix an issue where the `\x{hhhh}`, `\0ooo`, and  `\$`  style character expressions in the regular expression pattern were not syntax-highlighted correctly.
+- Fix an issue where the application could rarely crash when printing a document.
+- Fix an issue where the application could rarely crash when opening a document under macOS 10.14 and earlier.
+
+
+
+3.8.10 (396)
+--------------------------
+
+### Improvements
+
+- Optimize the performance of the invisible character drawing, the hanging indent calculation, and the line number view drawing.
+- Make space to draw the invisible symbol for ZERO WIDTH SPACE (U+200B) when the “other invisible characters” option is enabled.
+- Enable “Move Line Down” and “Move Line Up” commands swap lines with the last empty line.
+- Improve general performance while typing.
+- Update “CSS” syntax style.
+- [trivial] Keep the visible area after resizing a document window even if overscrolling is enabled.
+- [trivial] Adjust the theme “Note”.
+
+
+### Fixes
+
+- Fix an issue where the Unicode code point field in the document inspector displayed always “not selected.”
+- Fix an issue where insertion points multiplied too many when adding them with `^⇧↑` or `^⇧↓` shortcut under specific conditions.
+- Fix an issue where default theme change in the preferences was not applied to opened documents under specific conditions.
+- Fix an issue where unescaping replacement string in the regular expression replacement failed with specific text patterns.
+- Fix an issue where the editor's line height and tab width in the opened windows did not update even the setting is changed.
+- Fix an issue where the rainbow cursor could appear when finding the brace pair in the latter part of a large document.
+- Fix an issue where the application crashed when moving lines down under specific conditions.
+- Fix an issue where the “Sort by Pattern” with column sort key dropped the last character from the sort key string.
+- Fix an issue where the current line highlight remained when quickly moving selection by dragging.
+- Fix an issue where the writable area of newly added split editors shrank.
+- Fix an issue in scripting where settings some properties, such as `tab width`, `tab expands` and `wrap lines`, in the document creation phase were ignored.
+- Improve stability.
+
+
+
+3.8.9 (394)
+--------------------------
+
+### Improvements
+
+- Significantly reduce the time of the rainbow cursor after the opening of a large document by optimizing hanging indent calculation.
+- [trivial] Optimize current line highlighting.
+
+
+### Fixes
+
+- Fix an issue on CotEditor 3.8.8 where the application could rarely crash immediately after opening a document window under some very specific conditions.
+- Fix an issue where the progress indicator for the outline menu in the navigation bar could rarely remain.
+
+
+
+3.8.8 (391)
+--------------------------
+
+### New Features
+
+- Add a new “Straighten Quotes” command to Edit > Substitutions menu.
+
+
+### Improvements
+
+- Add “Replace Quotes,” “Replace Dashes,” and “Replace Text” commands to Edit > Substitutions menu.
+- Restore the default window size setting in the Window preferences pane.
+- Enable setting multiple cursor points in snippets.
+- Optimize the timing of view updating in some specific views.
+- Optimize some background jobs.
+- Toggle only the checkbox in a table that the user actually clicked and ignore others when the clicked checkbox is not contained to the selected rows.
+- Fold license descriptions in the acknowledgments.
+- [trivial] Tweak the visual notification for wrapping search.
+- [dev] Replace Differ framework with DifferenceKit.
+- [dev][non-AppStore ver.] Change the Sparkle branch from “ui-separation-and-xpc” to “2.x”.
+
+
+### Fixes
+
+- Fix an issue on macOS 10.15 where document windows had a glitch when a search is wrapped.
+- Fix an issue where the font size of the line number view was occasionally not updated even when text size is changed.
+- Fix an issue where “⌘⇧T” shortcut key assigned for “Show/Hide Tab Bar” was ignored under specific conditions.
+- Fix an issue where the width of the inspector was occasionally not properly set.
+- Fix an issue where the wrong warning message displayed in the multiple replacement panel even when there is no invalid condition.
+- Fix a possible crash when transforming the case of selection that includes specific character order.
+- Fix a possible crash when a document file is modified by another process.
+- [trivial] Fix a typo in French (Thanks to Arnaud Tanchoux!).
+- Improve stability.
+
+
+
+3.8.7 (389)
+--------------------------
+
+### Improvements
+
+- Revert shortcut `⌘/` to comment-out toggle.
+- Add “.zprofile” and “.zlogin” extensions to “Shell Script” syntax style.
+
+
+
+3.8.6 (387)
+--------------------------
+
+### Improvements
+
+- Change the default shortcut for Format > Font > “Reset to Default” command to `⌘0` and let “Bigger” command accept also `⌘=`.
+- Add shortcut `⌘/` to “Show/Hide Status Bar” command.
+- Add shortcut `⌘⇧T` to “Show/Hide Tab Bar” command.
+- Avoid showing rainbow cursor when canceling the initial syntax highlight.
+- [trivial] Modify the layout of the progress dialog and the regular expression syntax reference.
+- [trivial] Let input fields in the Edit pane accept values without a percent sign.
+
+
+### Fixes
+
+- Fix an issue where creating multiple cursors by rectangular selection failed under macOS 10.15.
+- Fix an issue where the selection highlight color in inactive windows could make text hard to read under macOS 10.14–10.15.
+- Fix an issue where the progress message by find/replacement was not updated when no occurrence found.
+- Fix a possible crash when an invalid color code is input to the color code panel.
+- Improve stability.
+
+
+
+3.8.5 (384)
+--------------------------
+
+### Improvements
+
+- Uncomment comment lines even if the delimiters locate after some indent.
+- Raise an alert when performing find (or replacement) with “in selection” option while no text is selected.
+- Change the Console font to monospaced.
+- Dim the Console content area during the incremental search.
+- Accept importing custom syntax styles with “.yml” extension.
+- Avoid re-parsing syntax highlight when the appearance is switched.
+- Support Dark Mode in the help.
+- [non-AppStore ver.] Update Sparkle framework.
+- [trivial] Tweak some terminology in the menu.
+- [trivial] Adjust the pinch-zoom pitch.
+
+
+### Fixes
+
+- Fix an issue where the text color in the status bar was sometimes not updated immediately after switching window appearance.
+- Fix an issue where parsing syntax style files could fail.
+- Fix an issue where uncommenting inline comments failed when multiple cursors locate in the same line.
+- Avoid rainbow cursor when about to display the Text menu while selecting large number of text.
+- Update PHP and Julia syntax styles to remove duplicated keywords.
+
+
+
+3.8.4 (381)
+--------------------------
+
+### Improvements
+
+- Insert soft tabs to all insertion points when typing the tab key.
+
+
+### Fixes
+
+- Fix an issue on macOS 10.13-14 that the application became unstable with some specific actions when the cursor locates the end of the document.
+
+
+
+3.8.3 (379)
+--------------------------
+
+### Improvements
+
+- Restore all of the last cursors on the window restoration.
+- Highlight matching braces for all cursors.
+- Adjust the printing area by the vertical text orientation.
+- Update JSON syntax style by adding “.resolved” extension.
+
+
+### Fixes
+
+- Fix area to draw text on printing, especially for macOS 10.15 Catalina.
+- Fix an issue on macOS 10.13-14 where spaces at the end of the document could not be deleted by delete key.
+- Fix an issue on macOS 10.13-14 where performing return key just after an open bracket at the end of the document made the application freeze.
+- Fix an issue where the editor theme for newly opened windows did not match to the window appearance when the system appearance was changed after the application launch.
+- Fix an issue where a highlighting indicator showed up at a wrong location when pressing the enter key just before a closing bracket.
+- [trivial] Fix French localization.
+
+
+
 3.8.2 (377)
 --------------------------
 
 ### Fixes
 
-- Add an additional workaround to detour the bug in macOS 10.14 that crashes/freezes the application.
+- Add an additional workaround to detour the bug in macOS 10.13-14 that crashes/freezes the application.
 
 
 
@@ -16,7 +388,7 @@ Change Log
 
 ### Fixes
 
-- Address a critical issue where the application could crash under macOS 10.14.
+- Address a critical issue where the application could crash under macOS 10.13-14.
 - Fix an issue that the documents opened together were not opened as a single window with multiple tabs.
 
 
@@ -94,7 +466,7 @@ no change.
 ### Improvements
 
 - Keep last opacity state of restored document windows.
-- Update behavior of Opt+Arrow shortcut series. 
+- Update behavior of Opt+Arrow shortcut series.
 
 
 ### Fixes
@@ -701,7 +1073,7 @@ no change.
 - Fix an issue where theme was not applied to document print when the print theme setting is “Same as Document's Setting”.
 - Fix an issue where “Copy as Rich Text” command lost the style information when paste to some specific applications, such as Pages.
 - [beta] Fix an issue where theme color was not applied to document print.
-- [beta] Fix an issue where the editable area in editors are ocasionally set wrong after zooming on macOS 10.14 Mojave.
+- [beta] Fix an issue where the editable area in editors are occasionally set wrong after zooming on macOS 10.14 Mojave.
 
 
 
@@ -743,7 +1115,7 @@ no change.
 ### Known Issues
 
 - [Mojave] The title bar color is not correctly updated when the system appearance is changed.
-- [Mojave] The editable area in editors are ocasionally set wrong after zooming.
+- [Mojave] The editable area in editors are occasionally set wrong after zooming.
 
 
 

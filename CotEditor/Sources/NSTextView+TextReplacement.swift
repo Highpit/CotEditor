@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2014-2019 1024jp
+//  © 2014-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ extension NSTextView {
         guard !strings.isEmpty, let textStorage = self.textStorage else { return false }
         
         // register redo for text selection
-        // -> Prefer using `rangesForUserTextChange` to save also multi-insertion points
+        // -> Prefer using `rangesForUserTextChange` to save also multi-insertion points.
         self.setSelectedRangesWithUndo(self.rangesForUserTextChange ?? self.selectedRanges)
         
         // tell textEditor about beginning of the text processing
@@ -59,6 +59,28 @@ extension NSTextView {
         if let actionName = actionName {
             self.undoManager?.setActionName(actionName)
         }
+        
+        // manually calculate the cursor locations after the replacement for multiple insertions
+        let selectedRanges: [NSRange]? = {
+            // use ones when explicitly specified
+            if let selectedRanges = selectedRanges { return selectedRanges }
+            
+            // let NSTextView culculate by single insertion editing
+            guard
+                let insertionRanges = self.rangesForUserTextChange as? [NSRange],
+                insertionRanges.count > 1,
+                insertionRanges == ranges
+                else { return nil }
+            
+            var offset = 0
+            return zip(ranges, strings).map { (range, string) in
+                let length = string.length
+                let location = range.lowerBound + offset + length
+                offset += length - range.length
+                
+                return NSRange(location: location, length: 0)
+            }
+        }()
         
         textStorage.beginEditing()
         // use a backward enumeration to skip adjustment of applying location
@@ -73,7 +95,7 @@ extension NSTextView {
         self.didChangeText()
         
         // apply new selection ranges
-        self.setSelectedRangesWithUndo(selectedRanges ?? self.selectedRanges as! [NSRange])
+        self.setSelectedRangesWithUndo(selectedRanges ?? self.selectedRanges.map(\.rangeValue))
         
         return true
     }
@@ -110,21 +132,23 @@ extension NSTextView {
     func trimTrailingWhitespace(ignoresEmptyLines: Bool, keepingEditingPoint: Bool = false) {
         
         assert(Thread.isMainThread)
-
+        
         let ranges = self.string.rangesOfTrailingWhitespace(ignoresEmptyLines: ignoresEmptyLines)
-        let editingRanges = (self.rangesForUserTextChange ?? self.selectedRanges).map { $0.rangeValue }
+        let editingRanges = (self.rangesForUserTextChange ?? self.selectedRanges).map(\.rangeValue)
         
         // exclude editing lines if needed
         let replacementRanges: [NSRange] = keepingEditingPoint
             ? ranges.filter { range in editingRanges.allSatisfy { !$0.touches(range) } }
             : ranges
-           
+        
         guard !replacementRanges.isEmpty else { return }
         
         let replacementStrings = [String](repeating: "", count: replacementRanges.count)
         
         // calculate selectedRanges after deletion
-        let removedIndexes = replacementRanges.reduce(into: IndexSet()) { $0.insert(integersIn: $1.lowerBound..<$1.upperBound) }
+        let removedIndexes = replacementRanges
+            .compactMap { Range($0) }
+            .reduce(into: IndexSet()) { $0.insert(integersIn: $1) }
         let selectedRanges: [NSRange] = editingRanges.map { range in
             let location = range.location - removedIndexes.count { $0 < range.location }
             let length = range.length - removedIndexes.count { range.contains($0) }
@@ -148,12 +172,12 @@ extension String {
     init(anyString: Any) {
         
         switch anyString {
-        case let string as String:
-            self = string
-        case let attributedString as NSAttributedString:
-            self = attributedString.string
-        default:
-            preconditionFailure()
+            case let string as String:
+                self = string
+            case let attributedString as NSAttributedString:
+                self = attributedString.string
+            default:
+                preconditionFailure()
         }
     }
     
@@ -161,13 +185,13 @@ extension String {
 
 
 extension String {
-
+    
     func rangesOfTrailingWhitespace(ignoresEmptyLines: Bool) -> [NSRange] {
         
         let pattern = ignoresEmptyLines ? "(?<!^|[ \\t])[ \\t]+$" : "[ \\t]+$"
         let regex = try! NSRegularExpression(pattern: pattern, options: .anchorsMatchLines)
         
-        return regex.matches(in: self, range: self.nsRange).map { $0.range }
+        return regex.matches(in: self, range: self.nsRange).map(\.range)
     }
     
 }

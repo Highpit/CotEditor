@@ -73,7 +73,9 @@ final class DocumentWindow: NSWindow {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
         
         self.appearanceObserver = self.observe(\.effectiveAppearance) { [weak self] (_, _) in
-            self?.invalidateTitlebarOpacity()
+            guard let self = self, !self.isOpaque else { return }
+            
+            self.invalidateTitlebarOpacity()
         }
     }
     
@@ -108,7 +110,7 @@ final class DocumentWindow: NSWindow {
     }
     
     
-    /// store UI state
+    /// resore UI state
     override func restoreState(with coder: NSCoder) {
         
         super.restoreState(with: coder)
@@ -119,7 +121,7 @@ final class DocumentWindow: NSWindow {
     }
     
     
-    /// resume UI state
+    /// store UI state
     override func encodeRestorableState(with coder: NSCoder) {
         
         super.encodeRestorableState(with: coder)
@@ -134,11 +136,13 @@ final class DocumentWindow: NSWindow {
     /// make sure window title bar (incl. toolbar) is opaque
     private func invalidateTitlebarOpacity() {
         
+        guard let titlebarView = self.titlebarView else { return }
+        
         // dirty manupulation to avoid the title bar being dyed in the window background color (2016-01).
-        self.titlebarView?.wantsLayer = !self.isOpaque
-        self.titlebarView?.layer?.backgroundColor = self.isOpaque ? nil : NSColor.windowBackgroundColor.cgColor(for: self.effectiveAppearance)
+        titlebarView.wantsLayer = !self.isOpaque
+        titlebarView.layer?.backgroundColor = self.isOpaque ? nil : NSColor.windowBackgroundColor.cgColor(for: self.effectiveAppearance)
     }
-
+    
 }
 
 
@@ -173,22 +177,46 @@ extension DocumentWindow {
         
         guard !super.performKeyEquivalent(with: event) else { return true }
         
-        // select tabbed window with `⌘+number`
-        // -> select last tab with `⌘0`
-        guard
-            event.modifierFlags.intersection(.deviceIndependentFlagsMask).subtracting(.numericPad) == .command,
+        // prefer existing shortcut that user might define
+        guard NSApp.mainMenu?.performKeyEquivalent(with: event) != true else { return true }
+        
+        let modifierFlags = event.modifierFlags.intersection(.deviceIndependentFlagsMask).subtracting(.numericPad)
+        
+        // toggle tab bar with ⌘⇧T`
+        // -> This is needed under the case when "Show/Hide Tab Bar" menu item is not yet added to the View menu. (2020-01)
+        if modifierFlags == [.command, .shift], event.characters == "t" {
+            self.toggleTabBar(nil)
+            return true
+        }
+        
+        // select tabbed window with `⌘+number` (`⌘9` for the last tab)
+        if
+            modifierFlags == [.command],
             let characters = event.charactersIgnoringModifiers,
             let number = Int(characters), number > 0,
             let windows = self.tabbedWindows,
             let window = (number == 9) ? windows.last : windows[safe: number - 1]  // 1-based to 0-based
-            else { return false }
+        {
+            window.tabGroup?.selectedWindow = window
+            return true
+        }
         
-        // prefer existing shortcut that user might define
-        guard !NSApp.mainMenu!.performKeyEquivalent(with: event) else { return true }
+        return false
+    }
+    
+    
+    override func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         
-        window.tabGroup?.selectedWindow = window
+        // programmatically set the shortcut for "Show/Hide Tab Bar", which is inserted by AppKit automatically.
+        switch menuItem.action {
+            case #selector(toggleTabBar):
+                menuItem.keyEquivalentModifierMask = [.command, .shift]
+                menuItem.keyEquivalent = "t"
+            default:
+                break
+        }
         
-        return true
+        return super.validateMenuItem(menuItem)
     }
     
 }

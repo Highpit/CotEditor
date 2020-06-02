@@ -27,7 +27,7 @@
 import XCTest
 @testable import CotEditor
 
-class LineEndingTests: XCTestCase {
+final class LineEndingTests: XCTestCase {
     
     func testLineEnding() {
         
@@ -81,5 +81,5 @@ class LineEndingTests: XCTestCase {
         XCTAssertEqual(implicitConvertedRange.location, 2)
         XCTAssertEqual(implicitConvertedRange.length, 2)
     }
-
+    
 }

@@ -2,21 +2,30 @@
   "object": {
     "pins": [
       {
-        "package": "Differ",
-        "repositoryURL": "https://github.com/tonyarnold/Differ",
+        "package": "DifferenceKit",
+        "repositoryURL": "https://github.com/ra1028/DifferenceKit",
         "state": {
           "branch": null,
-          "revision": "e2cca36e7258dd8add88ae46b5ea56509b066e21",
-          "version": "1.4.3"
+          "revision": "14c66681e12a38b81045f44c6c29724a0d4b0e72",
+          "version": "1.1.5"
         }
       },
       {
         "package": "ColorCode",
-        "repositoryURL": "https://github.com/1024jp/WFColorCode.git",
+        "repositoryURL": "https://github.com/1024jp/WFColorCode",
         "state": {
           "branch": null,
-          "revision": "c1887d3550e0887efb087f61d1651613c08d68a2",
-          "version": "2.5.0"
+          "revision": "70ca646fed5c40e19331d48b2ba38df1f790c828",
+          "version": "2.6.1"
+        }
+      },
+      {
+        "package": "Yams",
+        "repositoryURL": "https://github.com/jpsim/Yams",
+        "state": {
+          "branch": null,
+          "revision": "c947a306d2e80ecb2c0859047b35c73b8e1ca27f",
+          "version": "2.0.0"
         }
       }
     ]

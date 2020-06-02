@@ -61,15 +61,17 @@ final class OpenPanelAccessoryController: NSViewController {
     
     
     
-    // MARK: Action Messags
+    // MARK: Action Messages
     
     /// toggle visivility of hidden files
     @IBAction func toggleShowsHidenFiles(_ sender: NSButton) {
         
+        guard let openPanel = self.openPanel else { return assertionFailure() }
+        
         let showsHiddenFiles = (sender.integerValue == 1)
         
-        self.openPanel?.showsHiddenFiles = showsHiddenFiles
-        self.openPanel?.treatsFilePackagesAsDirectories = showsHiddenFiles
+        openPanel.showsHiddenFiles = showsHiddenFiles
+        openPanel.treatsFilePackagesAsDirectories = showsHiddenFiles
     }
     
     
@@ -83,14 +85,18 @@ final class OpenPanelAccessoryController: NSViewController {
         
         menu.removeAllItems()
         
-        let autoDetectItem = NSMenuItem(title: "Auto-Detect".localized, action: nil, keyEquivalent: "")
+        let autoDetectItem = NSMenuItem(title: "Automatic".localized, action: nil, keyEquivalent: "")
         autoDetectItem.tag = Int(String.Encoding.autoDetection.rawValue)
         menu.addItem(autoDetectItem)
         menu.addItem(.separator())
         
-        let items = EncodingManager.shared.createEncodingMenuItems()
-        for item in items {
-            menu.addItem(item)
+        if #available(macOS 10.14, *) {
+            menu.items += EncodingManager.shared.createEncodingMenuItems()
+        } else {
+            let items = EncodingManager.shared.createEncodingMenuItems()
+            for item in items {
+                menu.addItem(item)
+            }
         }
         
         self.selectedEncoding = .autoDetection

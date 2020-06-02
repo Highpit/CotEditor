@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2014-2019 1024jp
+//  © 2014-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@ final class FindPanelFieldViewController: NSViewController, NSTextViewDelegate {
     private var scrollerStyleObserver: NSKeyValueObservation?
     private var defaultsObservers: [UserDefaultsObservation] = []
     
-    @IBOutlet private var findTextView: RegexFindPanelTextView?  // NSTextView cannot be weak
-    @IBOutlet private var replacementTextView: RegexFindPanelTextView?  // NSTextView cannot be weak
+    @IBOutlet private weak var findTextView: RegexFindPanelTextView?
+    @IBOutlet private weak var replacementTextView: RegexFindPanelTextView?
     @IBOutlet private weak var findHistoryMenu: NSMenu?
     @IBOutlet private weak var replaceHistoryMenu: NSMenu?
     @IBOutlet private weak var findResultField: NSTextField?
@@ -118,13 +118,13 @@ final class FindPanelFieldViewController: NSViewController, NSTextViewDelegate {
         guard let textView = notification.object as? NSTextView else { return assertionFailure() }
         
         switch textView {
-        case self.findTextView!:
-            self.clearNumberOfReplaced()
-            self.clearNumberOfFound()
-        case self.replacementTextView!:
-            self.clearNumberOfReplaced()
-        default:
-            break
+            case self.findTextView!:
+                self.clearNumberOfReplaced()
+                self.clearNumberOfFound()
+            case self.replacementTextView!:
+                self.clearNumberOfReplaced()
+            default:
+                break
         }
     }
     
@@ -180,6 +180,7 @@ final class FindPanelFieldViewController: NSViewController, NSTextViewDelegate {
     }
     
     
+    
     // MARK: Public Methods
     
     /// receive number of found
@@ -189,10 +190,10 @@ final class FindPanelFieldViewController: NSViewController, NSTextViewDelegate {
         
         let message: String = {
             switch numberOfFound {
-            case ..<0:
-                return "Not Found".localized
-            default:
-                return String(format: "%@ found".localized, String.localizedStringWithFormat("%li", numberOfFound))
+                case ..<0:
+                    return "Not Found".localized
+                default:
+                    return String(format: "%@ found".localized, String.localizedStringWithFormat("%li", numberOfFound))
             }
         }()
         self.applyResult(message: message, textField: self.findResultField!, textView: self.findTextView!)
@@ -212,10 +213,10 @@ final class FindPanelFieldViewController: NSViewController, NSTextViewDelegate {
         
         let message: String = {
             switch numberOfReplaced {
-            case ..<0:
-                return "Not Replaced".localized
-            default:
-                return String(format: "%@ replaced".localized, String.localizedStringWithFormat("%li", numberOfReplaced))
+                case ..<0:
+                    return "Not Replaced".localized
+                default:
+                    return String(format: "%@ replaced".localized, String.localizedStringWithFormat("%li", numberOfReplaced))
             }
         }()
         self.applyResult(message: message, textField: self.replacementResultField!, textView: self.replacementTextView!)
@@ -225,7 +226,7 @@ final class FindPanelFieldViewController: NSViewController, NSTextViewDelegate {
             NSAccessibility.post(element: window, notification: .announcementRequested, userInfo: [.announcement: message])
         }
     }
-
+    
     
     
     // MARK: Private Methods
@@ -274,7 +275,7 @@ final class FindPanelFieldViewController: NSViewController, NSTextViewDelegate {
         
         self.applyResult(message: nil, textField: self.findResultField!, textView: self.findTextView!)
         
-        // -> specify the object to remove osberver to avoid removing the windowWillClose notification (via delegate) from find panel itself.
+        // -> Specify the object to remove observer to avoid removing the windowWillClose notification (via delegate) from the find panel itself.
         self.removeCurrentTargetObservers()
     }
     

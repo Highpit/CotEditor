@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2014-2019 1024jp
+//  © 2014-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -57,10 +57,9 @@ final class Console {
 
 
 
-
 // MARK: -
 
-final class ConsoleWindowController: NSWindowController {
+final class ConsolePanelController: NSWindowController {
     
     // MARK: Window Controller Methods
     
@@ -83,6 +82,14 @@ final class ConsoleViewController: NSViewController {
     
     private static let fontSize: CGFloat = 11
     
+    private let messageFont: NSFont = {
+        if #available(macOS 10.15, *) {
+            return .monospacedSystemFont(ofSize: ConsoleViewController.fontSize, weight: .regular)
+        } else {
+            return NSFont(named: .menlo, size: ConsoleViewController.fontSize)!
+        }
+    }()
+    
     private let messageParagraphStyle: NSParagraphStyle = {
         // indent for message body
         let paragraphStyle = NSParagraphStyle.default.mutable
@@ -97,7 +104,7 @@ final class ConsoleViewController: NSViewController {
         return formatter
     }()
     
-    @IBOutlet private var textView: NSTextView?  // NSTextView cannot be weak
+    @IBOutlet private weak var textView: NSTextView?
     @IBOutlet private weak var textFinder: NSTextFinder?
     
     
@@ -110,7 +117,6 @@ final class ConsoleViewController: NSViewController {
         
         super.viewDidLoad()
         
-        self.textView!.font = .messageFont(ofSize: Self.fontSize)
         self.textView!.textContainerInset = NSSize(width: 0, height: 4)
     }
     
@@ -135,9 +141,12 @@ final class ConsoleViewController: NSViewController {
         }
         
         // append indented message
-        let attrMessage = NSAttributedString(string: "\n" + log.message + "\n", attributes: [.paragraphStyle: self.messageParagraphStyle])
+        let attributes: [NSAttributedString.Key: Any] = [.paragraphStyle: self.messageParagraphStyle,
+                                                         .font: self.messageFont]
+        let attrMessage = NSAttributedString(string: "\n" + log.message + "\n", attributes: attributes)
         attrString.append(attrMessage)
-        attrString.addAttributes([.foregroundColor: NSColor.labelColor], range: attrString.range)
+        
+        attrString.addAttribute(.foregroundColor, value: NSColor.labelColor, range: attrString.range)
         
         textView.textStorage?.append(attrString)
         NSAccessibility.post(element: textView, notification: .valueChanged)

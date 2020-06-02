@@ -9,7 +9,7 @@
 //  ---------------------------------------------------------------------------
 //
 //  © 2004-2007 nakamuxu
-//  © 2014-2019 1024jp
+//  © 2014-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -54,14 +54,14 @@ extension Document {
         
         set {
             switch newValue {
-            case let textStorage as NSTextStorage:
-                self.insert(string: textStorage.string, at: .replaceAll)
+                case let textStorage as NSTextStorage:
+                    self.insert(string: textStorage.string, at: .replaceAll)
                 
-            case let string as String:
-                self.insert(string: string, at: .replaceAll)
+                case let string as String:
+                    self.insert(string: string, at: .replaceAll)
                 
-            default:
-                assertionFailure()
+                default:
+                    assertionFailure()
             }
         }
     }
@@ -107,20 +107,6 @@ extension Document {
         
         get {
             switch self.lineEnding {
-            case .lf:
-                return .lf
-            case .cr:
-                return .cr
-            case .crlf:
-                return .crlf
-            default:
-                return .lf
-            }
-        }
-        
-        set {
-            let type: LineEnding = {
-                switch newValue {
                 case .lf:
                     return .lf
                 case .cr:
@@ -129,6 +115,20 @@ extension Document {
                     return .crlf
                 default:
                     return .lf
+            }
+        }
+        
+        set {
+            let type: LineEnding = {
+                switch newValue {
+                    case .lf:
+                        return .lf
+                    case .cr:
+                        return .cr
+                    case .crlf:
+                        return .crlf
+                    default:
+                        return .lf
                 }
             }()
             self.changeLineEnding(to: type)
@@ -171,7 +171,7 @@ extension Document {
         }
         
         set {
-            self.viewController?.wrapsLines = newValue
+            self.setViewControllerValue(newValue, for: \.wrapsLines)
         }
     }
     
@@ -184,7 +184,7 @@ extension Document {
         }
         
         set {
-            self.viewController?.tabWidth = newValue
+            self.setViewControllerValue(newValue, for: \.tabWidth)
         }
     }
     
@@ -197,7 +197,7 @@ extension Document {
         }
         
         set {
-            self.viewController?.isAutoTabExpandEnabled = newValue
+            self.setViewControllerValue(newValue, for: \.isAutoTabExpandEnabled)
         }
     }
     
@@ -327,7 +327,7 @@ extension Document {
             }
             
             self.selectedRange = foundRange
-            self.selection.contents = replacedString  // TextSelection's `setContents:` accepts also String for its argument
+            self.selection.contents = replacedString  // TextSelection's `setContents:` accepts also String for its argument.
             
             return 1
         }
@@ -342,23 +342,57 @@ extension Document {
     
     
     /// return sting in the specified range
-    func handleString(_ command: NSScriptCommand) -> String? {
+    @objc func handleString(_ command: NSScriptCommand) -> String? {
         
         guard
             let arguments = command.evaluatedArguments,
             let rangeArray = arguments["range"] as? [Int], rangeArray.count == 2
             else { return nil }
         
-        let location = rangeArray[0]
-        let length = max(rangeArray[1], 1)
+        let fuzzyRange = FuzzyRange(location: rangeArray[0], length: max(rangeArray[1], 1))
         
-        guard let range = string.range(location: location, length: length) else { return nil }
+        guard let range = string.range(in: fuzzyRange) else { return nil }
         
         return (self.string as NSString).substring(with: range)
     }
     
+    
+    
+    // MARK: Private Methods
+    
+    /// Set the value to DocumentViewController but lazily by waiting the DocumentViewController is attached if it is not available yet.
+    ///
+    /// When document's properties are set in the document creation phase like in the following code,
+    /// those setters are invoked while `self.viewController` is still `nil`.
+    /// Therefore, to avoid ignoring initialization, this method asynchronously waits for the DocumentViewController is available, and then sets the value.
+    ///
+    ///     tell application "CotEditor"
+    ///         make new document with properties { name: "Untitled.txt", tab width: 16 }
+    ///     end tell
+    ///
+    /// - Parameters:
+    ///   - value: The value to set.
+    ///   - keyPath: The keyPath of the DocumentViewController to set the value.
+    private func setViewControllerValue<Value>(_ value: Value, for keyPath: ReferenceWritableKeyPath<DocumentViewController, Value>) {
+        
+        if let viewController = self.viewController {
+            viewController[keyPath: keyPath] = value
+            return
+        }
+        
+        weak var observer: NSObjectProtocol?
+        observer = NotificationCenter.default.addObserver(forName: EditorTextView.didBecomeFirstResponderNotification, object: nil, queue: .main) { [weak self] _ in
+            guard let viewController = self?.viewController else { return }
+            
+            if let observer = observer {
+                NotificationCenter.default.removeObserver(observer)
+            }
+            
+            viewController[keyPath: keyPath] = value
+        }
+    }
+    
 }
-
 
 
 
@@ -375,13 +409,13 @@ private extension NSString.CompareOptions {
         self.init()
         
         if isRegex {
-            self.update(with: .regularExpression)
+            self.formUnion(.regularExpression)
         }
         if ignoresCase {
-            self.update(with: .caseInsensitive)
+            self.formUnion(.caseInsensitive)
         }
         if isBackwards {
-            self.update(with: .backwards)
+            self.formUnion(.backwards)
         }
     }
     

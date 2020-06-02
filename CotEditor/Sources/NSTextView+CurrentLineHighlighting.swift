@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2018-2019 1024jp
+//  © 2018-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ extension CurrentLineHighlighting {
         
         color.setFill()
         for rect in self.lineHighLightRects where rect.intersects(dirtyRect) {
-            rect.fill()
+            self.centerScanRect(rect).fill()
         }
         
         NSGraphicsContext.restoreGraphicsState()
@@ -68,7 +68,7 @@ extension CurrentLineHighlighting {
     private func calcurateLineHighLightRects() -> [NSRect] {
         
         return self.rangesForUserTextChange?
-            .map { $0.rangeValue }
+            .map(\.rangeValue)
             .map { (self.string as NSString).lineContentsRange(for: $0) }
             .unique
             .map { self.lineRect(for: $0) }
@@ -87,15 +87,9 @@ extension CurrentLineHighlighting {
             let layoutManager = self.layoutManager
             else { assertionFailure(); return .zero }
         
-        let rect = layoutManager.lineFragmentsRect(for: range)
-        
-        return NSRect(x: 0,
-                      y: rect.minY,
-                      width: textContainer.size.width,
-                      height: rect.height)
+        return layoutManager.lineFragmentsRect(for: range)
             .insetBy(dx: textContainer.lineFragmentPadding, dy: 0)
             .offset(by: self.textContainerOrigin)
-            .integral
     }
     
 }
@@ -106,19 +100,19 @@ private extension NSLayoutManager {
     
     func lineFragmentsRect(for range: NSRange) -> NSRect {
         
+        guard
+            self.attributedString().length > 0,
+            self.extraLineFragmentTextContainer == nil || range.lowerBound < self.attributedString().length
+            else { return self.extraLineFragmentRect }
+        
         let glyphRange = self.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
-        
-        guard glyphRange.lowerBound < self.numberOfGlyphs || self.extraLineFragmentTextContainer == nil else {
-            return self.extraLineFragmentRect
-        }
-        
+        let safeLowerIndex = self.isValidGlyphIndex(glyphRange.lowerBound) ? glyphRange.lowerBound : glyphRange.lowerBound - 1
         var effectiveRange: NSRange = .notFound
-        let lowerRect = self.lineFragmentRect(forGlyphAt: glyphRange.lowerBound, effectiveRange: &effectiveRange, withoutAdditionalLayout: true)
+        let lowerRect = self.lineFragmentRect(forGlyphAt: safeLowerIndex, effectiveRange: &effectiveRange)
         
         guard !effectiveRange.contains(glyphRange.upperBound) else { return lowerRect }
         
-        let upperBound = min(glyphRange.upperBound, self.numberOfGlyphs - 1)
-        let upperRect = self.lineFragmentRect(forGlyphAt: upperBound, effectiveRange: nil, withoutAdditionalLayout: true)
+        let upperRect = self.lineFragmentRect(forGlyphAt: glyphRange.upperBound - 1, effectiveRange: nil)
         
         return lowerRect.union(upperRect)
     }

@@ -9,7 +9,7 @@
 //  ---------------------------------------------------------------------------
 //
 //  © 2004-2007 nakamuxu
-//  © 2014-2019 1024jp
+//  © 2014-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -142,7 +142,7 @@ final class MenuKeyBindingManager: KeyBindingManager {
     
     
     // MARK: Private Methods
-
+    
     /// return key bindings for selector
     private func shortcut(for action: Selector, defaults usesDefaults: Bool) -> Shortcut {
         
@@ -167,17 +167,16 @@ final class MenuKeyBindingManager: KeyBindingManager {
         // specific tags
         if let tag = MainMenu.MenuItemTag(rawValue: menuItem.tag) {
             switch tag {
-            case .services,
-                 .recentDocumentsDirectory,
-                 .sharingService,
-                 .scriptDirectory:
-                return false
+                case .services,
+                     .recentDocumentsDirectory,
+                     .sharingService,
+                     .scriptDirectory:
+                    return false
             }
         }
         
         // specific actions
-        if let action = menuItem.action {
-            switch action {
+        switch menuItem.action {
             case #selector(EncodingHolder.changeEncoding),
                  #selector(SyntaxHolder.changeSyntaxStyle),
                  #selector(ThemeHolder.changeTheme),
@@ -187,18 +186,17 @@ final class MenuKeyBindingManager: KeyBindingManager {
                  #selector(AppDelegate.openHelpAnchor),
                  #selector(NSWindow.makeKeyAndOrderFront),
                  #selector(NSApplication.orderFrontCharacterPalette):  // = "Emoji & Symbols"
-                 return false
-                
+                return false
+            
             // window tabbing actions
             // -> Because they cannot be set correctly.
-            case #selector(NSWindow.selectNextTab(_:)),
-                 #selector(NSWindow.selectPreviousTab(_:)),
-                 #selector(NSWindow.moveTabToNewWindow(_:)),
-                 #selector(NSWindow.mergeAllWindows(_:)):
+            case #selector(NSWindow.selectNextTab),
+                 #selector(NSWindow.selectPreviousTab),
+                 #selector(NSWindow.moveTabToNewWindow),
+                 #selector(NSWindow.mergeAllWindows):
                 return false
-                
+            
             default: break
-            }
         }
         
         return true

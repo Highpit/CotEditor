@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2017-2018 1024jp
+//  © 2017-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -160,9 +160,10 @@ final class MultipleReplacementViewController: NSViewController, MultipleReplace
     
     
     /// commit unsaved changes
+    @discardableResult
     override func commitEditing() -> Bool {
         
-        super.commitEditing()
+        guard super.commitEditing() else { return false }
         
         self.endEditing()
         self.updateNotificationTask.fireNow()
@@ -195,7 +196,7 @@ final class MultipleReplacementViewController: NSViewController, MultipleReplace
     
     /// notify update to delegate
     private func notifyUpdate() {
-    
+        
         self.delegate?.didUpdate(setting: self.definition)
     }
     
@@ -203,7 +204,10 @@ final class MultipleReplacementViewController: NSViewController, MultipleReplace
     /// validate current setting
     @objc private func validateObject() {
         
-        self.hasInvalidSetting = self.definition.replacements.contains { (try? $0.validate()) != nil }
+        self.hasInvalidSetting = self.definition.replacements.contains {
+            do { try $0.validate() } catch { return true }
+            return false
+        }
     }
     
     
@@ -374,20 +378,20 @@ extension MultipleReplacementViewController: NSTableViewDelegate {
             else { return nil }
         
         switch identifier {
-        case .isEnabled:
-            cellView.objectValue = replacement.isEnabled
-        case .findString:
-            cellView.objectValue = replacement.findString
-        case .replacementString:
-            cellView.objectValue = replacement.replacementString
-        case .ignoresCase:
-            cellView.objectValue = replacement.ignoresCase
-        case .usesRegularExpression:
-            cellView.objectValue = replacement.usesRegularExpression
-        case .description:
-            cellView.objectValue = replacement.description
-        default:
-            preconditionFailure()
+            case .isEnabled:
+                cellView.objectValue = replacement.isEnabled
+            case .findString:
+                cellView.objectValue = replacement.findString
+            case .replacementString:
+                cellView.objectValue = replacement.replacementString
+            case .ignoresCase:
+                cellView.objectValue = replacement.ignoresCase
+            case .usesRegularExpression:
+                cellView.objectValue = replacement.usesRegularExpression
+            case .description:
+                cellView.objectValue = replacement.description
+            default:
+                preconditionFailure()
         }
         
         // update regex field
@@ -438,7 +442,9 @@ extension MultipleReplacementViewController: NSTableViewDelegate {
         
         // update all selected checkboxes in the same column
         let rowIndex = IndexSet(integer: row)
-        let rowIndexes = (sender is NSButton) ? rowIndex.union(tableView.selectedRowIndexes) : rowIndex
+        let rowIndexes = (sender is NSButton && tableView.selectedRowIndexes.contains(row))
+            ? rowIndex.union(tableView.selectedRowIndexes)
+            : rowIndex
         
         let identifier = tableView.tableColumns[column].identifier
         
@@ -448,34 +454,34 @@ extension MultipleReplacementViewController: NSTableViewDelegate {
                 var replacement = replacement
                 
                 switch sender {
-                case let textField as NSTextField:
-                    let value = textField.stringValue
-                    switch identifier {
-                    case .findString:
-                        replacement.findString = value
-                    case .replacementString:
-                        replacement.replacementString = value
-                    case .description:
-                        replacement.description = value.isEmpty ? nil : value
-                    default:
-                        preconditionFailure()
+                    case let textField as NSTextField:
+                        let value = textField.stringValue
+                        switch identifier {
+                            case .findString:
+                                replacement.findString = value
+                            case .replacementString:
+                                replacement.replacementString = value
+                            case .description:
+                                replacement.description = value.isEmpty ? nil : value
+                            default:
+                                preconditionFailure()
                     }
                     
-                case let checkbox as NSButton:
-                    let value = (checkbox.state == .on)
-                    switch identifier {
-                    case .isEnabled:
-                        replacement.isEnabled = value
-                    case .ignoresCase:
-                        replacement.ignoresCase = value
-                    case .usesRegularExpression:
-                        replacement.usesRegularExpression = value
-                    default:
-                        preconditionFailure()
+                    case let checkbox as NSButton:
+                        let value = (checkbox.state == .on)
+                        switch identifier {
+                            case .isEnabled:
+                                replacement.isEnabled = value
+                            case .ignoresCase:
+                                replacement.ignoresCase = value
+                            case .usesRegularExpression:
+                                replacement.usesRegularExpression = value
+                            default:
+                                preconditionFailure()
                     }
                     
-                default:
-                    preconditionFailure()
+                    default:
+                        preconditionFailure()
                 }
                 
                 return replacement
@@ -506,7 +512,8 @@ extension MultipleReplacementViewController: NSTableViewDataSource {
         tableView.selectRowIndexes(rowIndexes, byExtendingSelection: false)
         
         // store row index info to pasteboard
-        let rows = NSKeyedArchiver.archivedData(withRootObject: rowIndexes)
+        guard let rows = try? NSKeyedArchiver.archivedData(withRootObject: rowIndexes, requiringSecureCoding: true) else { return false }
+        
         pboard.setData(rows, forType: .rows)
         
         return true
@@ -536,7 +543,7 @@ extension MultipleReplacementViewController: NSTableViewDataSource {
         // obtain original rows from paste board
         guard
             let data = info.draggingPasteboard.data(forType: .rows),
-            let sourceRows = NSKeyedUnarchiver.unarchiveObject(with: data) as? IndexSet
+            let sourceRows = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSIndexSet.self, from: data) as IndexSet?
             else { return false }
         
         let destinationRow = row - sourceRows.count(in: 0...row)  // real insertion point after removing items to move

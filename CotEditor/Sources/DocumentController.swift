@@ -9,7 +9,7 @@
 //  ---------------------------------------------------------------------------
 //
 //  © 2004-2007 nakamuxu
-//  © 2014-2019 1024jp
+//  © 2014-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -34,10 +34,12 @@ protocol AdditionalDocumentPreparing: NSDocument {
 
 final class DocumentController: NSDocumentController {
     
-    private(set) lazy var autosaveDirectoryURL: URL =  try! FileManager.default.url(for: .autosavedInformationDirectory,
-                                                                                    in: .userDomainMask,
-                                                                                    appropriateFor: nil,
-                                                                                    create: true)
+    // MARK: Public Properties
+    
+    private(set) lazy var autosaveDirectoryURL: URL = try! FileManager.default.url(for: .autosavedInformationDirectory,
+                                                                                   in: .userDomainMask,
+                                                                                   appropriateFor: nil,
+                                                                                   create: true)
     private(set) var accessorySelectedEncoding: String.Encoding?
     
     
@@ -70,7 +72,7 @@ final class DocumentController: NSDocumentController {
     
     /// automatically inserts Share menu
     override var allowsAutomaticShareMenu: Bool {
-
+        
         return true
     }
     
@@ -201,11 +203,14 @@ final class DocumentController: NSDocumentController {
     }
     
     
-    /// return enability of actions
+    /// return availability of actions
     override func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {
         
-        if item.action == #selector(newDocumentAsTab) {
-            return self.currentDocument != nil
+        switch item.action {
+            case #selector(newDocumentAsTab):
+                return self.currentDocument != nil
+            default:
+                break
         }
         
         return super.validateUserInterfaceItem(item)
@@ -280,8 +285,8 @@ final class DocumentController: NSDocumentController {
         
         // notify accessibility clients about the value replacement of the transient document with opened document
         document.textStorage.layoutManagers
-            .flatMap { $0.textContainers }
-            .compactMap { $0.textView }
+            .flatMap(\.textContainers)
+            .compactMap(\.textView)
             .forEach { NSAccessibility.post(element: $0, notification: .valueChanged) }
     }
     
@@ -330,6 +335,7 @@ private struct DocumentReadError: LocalizedError, RecoverableError {
         case tooLarge(size: Int)
     }
     
+    
     let kind: ErrorKind
     let url: URL
     
@@ -337,14 +343,14 @@ private struct DocumentReadError: LocalizedError, RecoverableError {
     var errorDescription: String? {
         
         switch self.kind {
-        case .binaryFile:
-            return String(format: "The file “%@” doesn’t appear to be text data.".localized,
-                          self.url.lastPathComponent)
+            case .binaryFile:
+                return String(format: "The file “%@” doesn’t appear to be text data.".localized,
+                              self.url.lastPathComponent)
             
-        case .tooLarge(let size):
-            return String(format: "The file “%@” has a size of %@.".localized,
-                          self.url.lastPathComponent,
-                          ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file))
+            case .tooLarge(let size):
+                return String(format: "The file “%@” has a size of %@.".localized,
+                              self.url.lastPathComponent,
+                              ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file))
         }
     }
     
@@ -352,12 +358,12 @@ private struct DocumentReadError: LocalizedError, RecoverableError {
     var recoverySuggestion: String? {
         
         switch self.kind {
-        case .binaryFile(let type):
-            let localizedTypeName = (UTTypeCopyDescription(type as CFString)?.takeRetainedValue() as String?) ?? "unknown file type"
-            return String(format: "The file is %@.\n\nDo you really want to open the file?".localized, localizedTypeName)
+            case .binaryFile(let type):
+                let localizedTypeName = (UTTypeCopyDescription(type as CFString)?.takeRetainedValue() as String?) ?? "unknown file type"
+                return String(format: "The file is %@.\n\nDo you really want to open the file?".localized, localizedTypeName)
             
-        case .tooLarge:
-            return "Opening such a large file can make the application slow or unresponsive.\n\nDo you really want to open the file?".localized
+            case .tooLarge:
+                return "Opening such a large file can make the application slow or unresponsive.\n\nDo you really want to open the file?".localized
         }
     }
     

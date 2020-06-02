@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2014-2019 1024jp
+//  © 2014-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -27,27 +27,25 @@ import Cocoa
 
 extension NSPrintInfo.AttributeKey {
     
-    static let theme = NSPrintInfo.AttributeKey(rawValue: "CEThemeName")
-    static let lineNumber = NSPrintInfo.AttributeKey(rawValue: "CEPrintLineNumber")
-    static let invisibles = NSPrintInfo.AttributeKey(rawValue: "CEPrintInvisibles")
-    static let printsHeader = NSPrintInfo.AttributeKey(rawValue: "CEPrintHeader")
-    static let primaryHeaderContent = NSPrintInfo.AttributeKey(rawValue: "CEPrimaryHeaderContent")
-    static let secondaryHeaderContent = NSPrintInfo.AttributeKey(rawValue: "CESecondaryHeaderContent")
-    static let primaryHeaderAlignment = NSPrintInfo.AttributeKey(rawValue: "CEPrimaryHeaderAlignment")
-    static let secondaryHeaderAlignment = NSPrintInfo.AttributeKey(rawValue: "CESecondaryHeaderAlignment")
-    static let printsFooter = NSPrintInfo.AttributeKey(rawValue: "CEPrintFooter")
-    static let primaryFooterContent = NSPrintInfo.AttributeKey(rawValue: "CEPrimaryFooterContent")
-    static let secondaryFooterContent = NSPrintInfo.AttributeKey(rawValue: "CESecondaryFooterContent")
-    static let primaryFooterAlignment = NSPrintInfo.AttributeKey(rawValue: "CEPrimaryFooterAlignment")
-    static let secondaryFooterAlignment = NSPrintInfo.AttributeKey(rawValue: "CESecondaryFooterAlignment")
+    static let theme = Self("CEThemeName")
+    static let lineNumber = Self("CEPrintLineNumber")
+    static let invisibles = Self("CEPrintInvisibles")
+    static let printsHeader = Self("CEPrintHeader")
+    static let primaryHeaderContent = Self("CEPrimaryHeaderContent")
+    static let secondaryHeaderContent = Self("CESecondaryHeaderContent")
+    static let primaryHeaderAlignment = Self("CEPrimaryHeaderAlignment")
+    static let secondaryHeaderAlignment = Self("CESecondaryHeaderAlignment")
+    static let printsFooter = Self("CEPrintFooter")
+    static let primaryFooterContent = Self("CEPrimaryFooterContent")
+    static let secondaryFooterContent = Self("CESecondaryFooterContent")
+    static let primaryFooterAlignment = Self("CEPrimaryFooterAlignment")
+    static let secondaryFooterAlignment = Self("CESecondaryFooterAlignment")
 }
 
 
-struct ThemeName {
+enum ThemeName {
     
     static let blackAndWhite = "Black and White".localized
-    
-    private init() { }
 }
 
 
@@ -73,16 +71,21 @@ final class PrintPanelAccessoryController: NSViewController, NSPrintPanelAccesso
     override var representedObject: Any? {
         
         didSet {
+            guard representedObject != nil else { return }
+            
+            // -> Property initialization must be done after setting representedObject, namely NSPrintInfo,
+            //    because these values need to be set also to printInfo through the computed setters.
+            assert(representedObject is NSPrintInfo)
+            
             let defaults = UserDefaults.standard
             
-            // set theme if needed
             self.theme = {
                 if let mode = PrintColorMode(rawValue: defaults[.printColorIndex]) {
                     switch mode {
-                    case .blackWhite:
-                        return ThemeName.blackAndWhite
-                    case .sameAsDocument:
-                        return ThemeManager.shared.userDefaultSettingName
+                        case .blackWhite:
+                            return ThemeName.blackAndWhite
+                        case .sameAsDocument:
+                            return ThemeManager.shared.userDefaultSettingName
                     }
                 }
                 return defaults[.printTheme] ?? ThemeName.blackAndWhite
@@ -101,10 +104,15 @@ final class PrintPanelAccessoryController: NSViewController, NSPrintPanelAccesso
             self.primaryFooterAlignment = defaults[.primaryFooterAlignment]
             self.secondaryFooterContent = defaults[.secondaryFooterContent]
             self.secondaryFooterAlignment = defaults[.secondaryFooterAlignment]
-            
-            // apply current theme
-            self.setupColorMenu()
         }
+    }
+    
+    
+    override func viewWillAppear() {
+        
+        super.viewWillAppear()
+        
+        self.setupColorMenu()
     }
     
     
@@ -141,7 +149,7 @@ final class PrintPanelAccessoryController: NSViewController, NSPrintPanelAccesso
         return [
             localizedSummaryItem(name: "Color", description: self.theme),
             localizedSummaryItem(name: "Line Number", description: self.lineNumberMode.description),
-            localizedSummaryItem(name: "Invisible Characters", description: self.invisibleCharsMode.description),
+            localizedSummaryItem(name: "Invisibles", description: self.invisibleCharsMode.description),
             
             localizedSummaryItem(name: "Print Header", description: self.printsHeader ? "On" : "Off"),
             localizedSummaryItem(name: "Primary Header", description: self.primaryHeaderContent.description),
@@ -171,13 +179,13 @@ final class PrintPanelAccessoryController: NSViewController, NSPrintPanelAccesso
     /// update popup menu for color setting
     private func setupColorMenu() {
         
-        let themeNames = ThemeManager.shared.settingNames
-        
         guard let popupButton = self.colorPopupButton else { return assertionFailure() }
         
-        popupButton.removeAllItems()
+        let themeNames = ThemeManager.shared.settingNames
         
         // build popup button
+        popupButton.removeAllItems()
+        
         popupButton.addItem(withTitle: ThemeName.blackAndWhite)
         popupButton.menu?.addItem(.separator())
         
@@ -189,11 +197,11 @@ final class PrintPanelAccessoryController: NSViewController, NSPrintPanelAccesso
             popupButton.lastItem?.indentationLevel = 1
         }
         
-        // select "Black and White" if there is nothing to select
+        // select menu item
         if themeNames.contains(self.theme) {
             popupButton.selectItem(withTitle: self.theme)
         } else {
-            popupButton.selectItem(at: 0)
+            popupButton.selectItem(at: 0)  // -> select "Black and White"
         }
     }
     
@@ -224,17 +232,17 @@ final class PrintPanelAccessoryController: NSViewController, NSPrintPanelAccesso
     
     
     /// whether draws line number
-    @objc dynamic var lineNumberMode: PrintLineNmuberMode {
+    @objc dynamic var lineNumberMode: PrintVisibilityMode {
         
-        get { PrintLineNmuberMode(self.settingValue(forKey: .lineNumber) as? Int) }
+        get { PrintVisibilityMode(self.settingValue(forKey: .lineNumber) as? Int) }
         set { self.setSettingValue(newValue.rawValue, forKey: .lineNumber) }
     }
     
     
     /// whether draws invisible characters
-    @objc dynamic var invisibleCharsMode: PrintInvisiblesMode {
+    @objc dynamic var invisibleCharsMode: PrintVisibilityMode {
         
-        get { PrintInvisiblesMode(self.settingValue(forKey: .invisibles) as? Int) }
+        get { PrintVisibilityMode(self.settingValue(forKey: .invisibles) as? Int) }
         set { self.setSettingValue(newValue.rawValue, forKey: .invisibles) }
     }
     
@@ -330,33 +338,17 @@ private func localizedSummaryItem(name: String, description: String) -> [NSPrint
 }
 
 
-private extension PrintLineNmuberMode {
+private extension PrintVisibilityMode {
     
     var description: String {
         
         switch self {
-        case .no:
-            return "Don’t Print"
-        case .sameAsDocument:
-            return "Same as Document’s Setting"
-        case .yes:
-            return "Print"
-        }
-    }
-}
-
-
-private extension PrintInvisiblesMode {
-    
-    var description: String {
-        
-        switch self {
-        case .no:
-            return "Don’t Print"
-        case .sameAsDocument:
-            return "Same as Document’s Setting"
-        case .all:
-            return "Print All"
+            case .no:
+                return "Don’t Print"
+            case .sameAsDocument:
+                return "Same as Document’s Setting"
+            case .yes:
+                return "Print"
         }
     }
 }
@@ -367,18 +359,18 @@ private extension PrintInfoType {
     var description: String {
         
         switch self {
-        case .none:
-            return "None"
-        case .syntaxName:
-            return "Syntax Name"
-        case .documentName:
-            return "Document Name"
-        case .filePath:
-            return "File Path"
-        case .printDate:
-            return "Print Date"
-        case .pageNumber:
-            return "Page Number"
+            case .none:
+                return "None"
+            case .syntaxName:
+                return "Syntax Name"
+            case .documentName:
+                return "Document Name"
+            case .filePath:
+                return "File Path"
+            case .printDate:
+                return "Print Date"
+            case .pageNumber:
+                return "Page Number"
         }
     }
 }
@@ -389,12 +381,12 @@ private extension AlignmentType {
     var description: String {
         
         switch self {
-        case .left:
-            return "Left"
-        case .center:
-            return "Center"
-        case .right:
-            return "Right"
+            case .left:
+                return "Left"
+            case .center:
+                return "Center"
+            case .right:
+                return "Right"
         }
     }
 }

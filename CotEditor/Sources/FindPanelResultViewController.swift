@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2015-2019 1024jp
+//  © 2015-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -37,13 +37,7 @@ final class FindPanelResultViewController: NSViewController, NSTableViewDataSour
     
     // MARK: Public Properties
     
-     var target: NSTextView? {
-        
-        // keep LayoutManager as `weak` instaed to avoid handling unsafe_unretained TextView
-        get { _layoutManager?.firstTextView }
-        set { _layoutManager = newValue?.layoutManager }
-    }
-    private weak var _layoutManager: NSLayoutManager?
+    weak var target: NSTextView?
     
     
     // MARK: Private Properties
@@ -82,7 +76,7 @@ final class FindPanelResultViewController: NSViewController, NSTableViewDataSour
     /// remove also find result highlights in the text view when result view disappear
     override func viewWillDisappear() {
         
-         self.unhighlight()
+        self.unhighlight()
     }
     
     
@@ -104,27 +98,27 @@ final class FindPanelResultViewController: NSViewController, NSTableViewDataSour
         let result = self.results[row]
         
         switch tableColumn?.identifier {
-        case NSUserInterfaceItemIdentifier("line"):
-            return result.lineNumber
+            case NSUserInterfaceItemIdentifier("line"):
+                return result.lineNumber
             
-        default:
-            let lineAttrString = result.attributedLineString.mutable
-            
-            // truncate
-            let leadingOverflow = result.inlineRange.location - maxLeftMargin
-            if leadingOverflow > 0 {
-                lineAttrString.replaceCharacters(in: NSRange(..<leadingOverflow), with: "…")
-            }
-            if lineAttrString.length > maxMatchedStringLength {
-                lineAttrString.replaceCharacters(in: NSRange(maxMatchedStringLength..<lineAttrString.length), with: "…")
-            }
-            
-            // truncate tail
-            let paragraphStyle = NSMutableParagraphStyle()
-            paragraphStyle.lineBreakMode = .byTruncatingTail
-            lineAttrString.addAttribute(.paragraphStyle, value: paragraphStyle, range: lineAttrString.range)
-            
-            return lineAttrString
+            default:
+                let lineAttrString = result.attributedLineString.mutable
+                
+                // truncate
+                let leadingOverflow = result.inlineRange.location - maxLeftMargin
+                if leadingOverflow > 0 {
+                    lineAttrString.replaceCharacters(in: NSRange(..<leadingOverflow), with: "…")
+                }
+                if lineAttrString.length > maxMatchedStringLength {
+                    lineAttrString.replaceCharacters(in: NSRange(maxMatchedStringLength..<lineAttrString.length), with: "…")
+                }
+                
+                // truncate tail
+                let paragraphStyle = NSParagraphStyle.default.mutable
+                paragraphStyle.lineBreakMode = .byTruncatingTail
+                lineAttrString.addAttribute(.paragraphStyle, value: paragraphStyle, range: lineAttrString.range)
+                
+                return lineAttrString
         }
     }
     
@@ -142,13 +136,13 @@ final class FindPanelResultViewController: NSViewController, NSTableViewDataSour
         let documentName = (target.window?.windowController?.document as? NSDocument)?.displayName ?? "Unknown"  // This should never be nil.
         let resultMessage: String = {
             switch results.count {
-            case 0:
-                return String(format: "No strings found in “%@”.".localized, documentName)
-            case 1:
-                return String(format: "Found one string in “%@”.".localized, documentName)
-            default:
-                let countStr = String.localizedStringWithFormat("%li", results.count)  // localize to add thousand separators
-                return String(format: "Found %@ strings in “%@”.".localized, countStr, documentName)
+                case 0:
+                    return String(format: "No strings found in “%@”.".localized, documentName)
+                case 1:
+                    return String(format: "Found one string in “%@”.".localized, documentName)
+                default:
+                    let countStr = String.localizedStringWithFormat("%li", results.count)  // localize to add thousand separators
+                    return String(format: "Found %@ strings in “%@”.".localized, countStr, documentName)
             }
         }()
         self.resultMessage = resultMessage

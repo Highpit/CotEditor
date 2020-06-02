@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2018-2019 1024jp
+//  © 2018-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -31,18 +31,18 @@ extension MultipleReplacement {
     func highlight(inSelection: Bool, completionHandler: @escaping (_ resultMessage: String) -> Void) {
         
         guard let textView = TextFinder.shared.client else {
-                NSSound.beep()
-                return
-            }
+            return NSSound.beep()
+        }
         
         let string = textView.string.immutable
-        let selectedRanges = textView.selectedRanges as! [NSRange]
+        let selectedRanges = textView.selectedRanges.map(\.rangeValue)
         
         textView.isEditable = false
         
         // setup progress sheet
         let progress = TextFindProgress(format: .replacement)
         let indicator = ProgressViewController.instantiate(storyboard: "ProgressView")
+        indicator.closesAutomatically = UserDefaults.standard[.findClosesIndicatorWhenDone]
         indicator.setup(progress: progress, message: "Highlight".localized)
         textView.viewControllerForSheet?.presentAsSheet(indicator)
         
@@ -61,10 +61,7 @@ extension MultipleReplacement {
             DispatchQueue.main.async {
                 textView.isEditable = true
                 
-                guard !progress.isCancelled else {
-                    indicator.dismiss(nil)
-                    return
-                }
+                guard !progress.isCancelled else { return }
                 
                 if !result.isEmpty {
                     // apply to the text view
@@ -87,10 +84,6 @@ extension MultipleReplacement {
                 
                 indicator.done()
                 
-                if UserDefaults.standard[.findClosesIndicatorWhenDone] {
-                    indicator.dismiss(nil)
-                }
-                
                 completionHandler(resultMessage)
             }
         }
@@ -103,19 +96,17 @@ extension MultipleReplacement {
         guard
             let textView = TextFinder.shared.client, textView.isEditable,
             textView.window?.attachedSheet == nil
-            else {
-                NSSound.beep()
-                return
-            }
-
+            else { return NSSound.beep() }
+        
         let string = textView.string.immutable
-        let selectedRanges = textView.selectedRanges as! [NSRange]
+        let selectedRanges = textView.selectedRanges.map(\.rangeValue)
         
         textView.isEditable = false
         
         // setup progress sheet
         let progress = TextFindProgress(format: .replacement)
         let indicator = ProgressViewController.instantiate(storyboard: "ProgressView")
+        indicator.closesAutomatically = UserDefaults.standard[.findClosesIndicatorWhenDone]
         indicator.setup(progress: progress, message: "Replace All".localized)
         textView.viewControllerForSheet?.presentAsSheet(indicator)
         
@@ -134,10 +125,7 @@ extension MultipleReplacement {
             DispatchQueue.main.async {
                 textView.isEditable = true
                 
-                guard !progress.isCancelled else {
-                    indicator.dismiss(nil)
-                    return
-                }
+                guard !progress.isCancelled else { return }
                 
                 if result.count > 0 {
                     // apply to the text view
@@ -154,10 +142,6 @@ extension MultipleReplacement {
                     : "Not Replaced".localized
                 
                 indicator.done()
-                
-                if UserDefaults.standard[.findClosesIndicatorWhenDone] {
-                    indicator.dismiss(nil)
-                }
                 
                 completionHandler(resultMessage)
             }

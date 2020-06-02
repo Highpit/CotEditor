@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2014-2019 1024jp
+//  © 2014-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -59,12 +59,12 @@ extension EditorTextView: Indenting {
     @IBAction func shift(_ sender: NSSegmentedControl) {
         
         switch sender.selectedSegment {
-        case 0:
-            self.shiftLeft(sender)
-        case 1:
-            self.shiftRight(sender)
-        default:
-            assertionFailure("Segmented shift button must have 2 segments only.")
+            case 0:
+                self.shiftLeft(sender)
+            case 1:
+                self.shiftRight(sender)
+            default:
+                assertionFailure("Segmented shift button must have 2 segments only.")
         }
     }
     
@@ -120,7 +120,7 @@ extension Indenting {
         // calculate new selection range
         let newSelectedRanges = selectedRanges.map { selectedRange -> NSRange in
             let shift = lineRanges.countPrefix { $0.location <= selectedRange.location }
-            let lineCount = lineRanges.count { selectedRange.intersection($0) != nil }
+            let lineCount = lineRanges.count { selectedRange.intersects($0) }
             let lengthDiff = max(lineCount - 1, 0) * indentLength
             
             return NSRange(location: selectedRange.location + shift * indentLength,
@@ -149,12 +149,12 @@ extension Indenting {
         let lines = lineRanges.map { string.substring(with: $0) }
         let dropCounts = lines.map { line -> Int in
             switch line.first {
-            case "\t":
-                return 1
-            case " ":
-                return line.prefix(self.tabWidth).countPrefix { $0 == " " }
-            default:
-                return 0
+                case "\t":
+                    return 1
+                case " ":
+                    return line.prefix(self.tabWidth).countPrefix { $0 == " " }
+                default:
+                    return 0
             }
         }
         
@@ -192,7 +192,7 @@ extension Indenting {
         guard !self.string.isEmpty else { return }
         
         // process whole document if no text selected
-        let ranges = self.selectedRange.isEmpty ? [self.string.nsRange] : self.selectedRanges as! [NSRange]
+        let ranges = self.selectedRange.isEmpty ? [self.string.nsRange] : self.selectedRanges.map(\.rangeValue)
         
         var replacementRanges = [NSRange]()
         var replacementStrings = [String]()

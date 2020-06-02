@@ -9,7 +9,7 @@
  Localized by Aurélien Roy
  ------------------------------------------------------------------------------
  
- © 2014-2019 CotEditor Project
+ © 2014-2020 CotEditor Project
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -135,8 +135,8 @@
 "631.title" = "Insérer un Backslash";
 /* Class = "NSMenuItem"; title = "Input Yen Mark"; ObjectID = "633"; */
 "633.title" = "Insérer le symbole Yen";
-/* Class = "NSMenuItem"; title = "Input in Unicode Hex…"; ObjectID = "tWx-pj-3PL"; */
-"tWx-pj-3PL.title" = "Insérer un code hexa Unicode...";
+/* Class = "NSMenuItem"; title = "Input in Unicode Code Point…"; ObjectID = "tWx-pj-3PL"; */
+"tWx-pj-3PL.title" = "Insérer un point de code Unicode...";
 
 /* Class = "NSMenuItem"; title = "Spelling and Grammar"; ObjectID = "2QI-XD-7pJ"; */
 "2QI-XD-7pJ.title" = "Orthographe et grammaire";
@@ -157,6 +157,14 @@
 "yN3-iT-4Lq.title" = "Substitutions";
 /* Class = "NSMenu"; title = "Substitutions"; ObjectID = "2wy-A5-6kZ"; */
 "2wy-A5-6kZ.title" = "Substitutions";
+/* Class = "NSMenuItem"; title = "Replace Quotes"; ObjectID = "7NX-1r-Wq7"; */
+"7NX-1r-Wq7.title" = "Remplacer les guillemets";
+/* Class = "NSMenuItem"; title = "Straighten Quotes"; ObjectID = "9gl-1h-Yit"; */
+"9gl-1h-Yit.title" = "Redresser les guillemets";
+/* Class = "NSMenuItem"; title = "Replace Dashes"; ObjectID = "hMS-qd-BCS"; */
+"hMS-qd-BCS.title" = "Remplacer les tirets";
+/* Class = "NSMenuItem"; title = "Replace Text"; ObjectID = "ue7-85-H8l"; */
+"ue7-85-H8l.title" = "Remplacer texte";
 /* Class = "NSMenuItem"; title = "Show Substitutions"; ObjectID = "gqI-2M-XIx"; */
 "gqI-2M-XIx.title" = "Afficher les substitutions";
 /* Class = "NSMenuItem"; title = "Smart Copy/Paste"; ObjectID = "QKD-ue-EQp"; */
@@ -236,7 +244,7 @@
 /* Class = "NSMenuItem"; title = "Auto-Expand Tabs"; ObjectID = "hsG-8k-OKX"; */
 "hsG-8k-OKX.title" = "Convertir automatiquement les tabulations";
 
-/* Class = "NSMenuItem"; title = "Show Invisible Characters"; ObjectID = "788"; */
+/* Class = "NSMenuItem"; title = "Show Invisibles"; ObjectID = "788"; */
 "788.title" = "Afficher les caractères invisibles";
 
 /* Class = "NSMenuItem"; title = "Writing Direction"; ObjectID = "mEh-BD-ZlV"; */
@@ -299,6 +307,8 @@
 /* Class = "NSMenuItem"; title = "Show Status Bar"; ObjectID = "325"; */
 "325.title" = "Afficher la barre d'état";
 
+/* Class = "NSMenuItem"; title = "Show Indent Guides"; ObjectID = "Qqu-pI-Xz6"; */
+"Qqu-pI-Xz6.title" = "Afficher les guides d'indentation";
 /* Class = "NSMenuItem"; title = "Show Page Guide"; ObjectID = "749"; */
 "749.title" = "Afficher le guide de page";
 
@@ -384,11 +394,11 @@
 /* Class = "NSMenuItem"; title = "Double Quotes"; ObjectID = "O8z-C9-ECD"; */
 "O8z-C9-ECD.title" = "Guillemets doubles";
 /* Class = "NSMenuItem"; title = "Parenthesis"; ObjectID = "G3o-1h-GwR"; */
-"G3o-1h-GwR.title" = "Parenthèses";
-/* Class = "NSMenuItem"; title = "Brackets"; ObjectID = "Xoq-43-C1z"; */
-"Xoq-43-C1z.title" = "Accolades";
-/* Class = "NSMenuItem"; title = "Square Brackets"; ObjectID = "cTU-2P-7Tp"; */
-"cTU-2P-7Tp.title" = "Crochets";
+"G3o-1h-GwR.title" = "Parenthèses";  // ()
+/* Class = "NSMenuItem"; title = "Braces"; ObjectID = "Xoq-43-C1z"; */
+"Xoq-43-C1z.title" = "Accolades";  // {}
+/* Class = "NSMenuItem"; title = "Brackets"; ObjectID = "cTU-2P-7Tp"; */
+"cTU-2P-7Tp.title" = "Crochets";  // []
 /* Class = "NSMenuItem"; title = "Custom…"; ObjectID = "3VX-DL-PgT"; */
 "3VX-DL-PgT.title" = "Personnalisé…";
 
@@ -488,7 +498,7 @@
 /* Class = "NSMenuItem"; title = "Find Next"; ObjectID = "NwE-Cf-L9F"; */
 "NwE-Cf-L9F.title" = "Rechercher le suivant";
 /* Class = "NSMenuItem"; title = "Find Previous"; ObjectID = "wiV-Hh-7xU"; */
-"wiV-Hh-7xU.title" = "Recherchr le précédent";
+"wiV-Hh-7xU.title" = "Rechercher le précédent";
 /* Class = "NSMenuItem"; title = "Find Selected Text"; ObjectID = "l33-Nz-UAw"; */
 "l33-Nz-UAw.title" = "Rechercher la sélection";
 /* Class = "NSMenuItem"; title = "Find All"; ObjectID = "HgR-ke-6gq"; */
@@ -582,8 +592,8 @@
 /* Class = "NSMenuItem"; title = "Acknowledgments"; ObjectID = "824"; */
 "824.title" = "Remerciements";
 
-/* Class = "NSMenuItem"; title = "Create Issue Report…"; ObjectID = "iHn-Ed-A8u"; */
-"iHn-Ed-A8u.title" = "Signaler un problème…";
+/* Class = "NSMenuItem"; title = "Create Issue Report"; ObjectID = "iHn-Ed-A8u"; */
+"iHn-Ed-A8u.title" = "Signaler un problème";
 /* Class = "NSMenuItem"; title = "Report Issue"; ObjectID = "Bk3-xx-uft"; */
 "Bk3-xx-uft.title" = "Signaler un problème";
 /* Class = "NSMenuItem"; title = "CotEditor Website"; ObjectID = "g34-YV-E6o"; */

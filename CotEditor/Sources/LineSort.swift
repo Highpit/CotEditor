@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2018 1024jp
+//  © 2018-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -47,22 +47,20 @@ extension SortPattern {
         
         var lines = string.components(separatedBy: .newlines)
         let firstLine = options.keepsFirstLine ? lines.removeFirst() : nil
-            
+        
         lines = lines
-            .map { line -> (line: String, key: String?) in
-                (line: line, key: self.sortKey(for: line))
-            }
+            .map { (line: $0, key: self.sortKey(for: $0)) }
             .sorted {
                 switch ($0.key, $1.key) {
-                case let (.some(key0), .some(key1)):
-                    return key0.compare(key1, options: compareOptions, locale: options.locale) == .orderedAscending
-                case (.none, .some):
-                    return false
-                case (.some, .none), (.none, .none):
-                    return true
+                    case let (.some(key0), .some(key1)):
+                        return key0.compare(key1, options: compareOptions, locale: options.locale) == .orderedAscending
+                    case (.none, .some):
+                        return false
+                    case (.some, .none), (.none, .none):
+                        return true
                 }
             }
-            .map { $0.line }
+            .map(\.line)
         
         if options.decending {
             lines.reverse()
@@ -135,11 +133,11 @@ final class CSVSortPattern: NSObject, SortPattern {
             end = line.index(start, offsetBy: component.count)
             
             range = start..<end
-            if let trimmedStart = component.firstIndex(where: { $0 != " " }) {
+            if let trimmedStart = component.firstIndex(where: { !$0.isWhitespace }) {
                 let offset = component.distance(from: component.startIndex, to: trimmedStart)
                 range = line.index(start, offsetBy: offset)..<range.upperBound
             }
-            if let trimmedEnd = component.lastIndex(where: { $0 != " " }) {
+            if let trimmedEnd = component.lastIndex(where: { $0.isWhitespace }) {
                 let offset = component.distance(from: component.startIndex, to: trimmedEnd)
                 range = range.lowerBound..<line.index(start, offsetBy: offset)
             }
@@ -187,9 +185,9 @@ final class RegularExpressionSortPattern: NSObject, SortPattern {
         
         if self.usesCaptureGroup {
             guard match.numberOfRanges > self.group else { return nil }
-            return Range(match.range(at: self.group), in: line)!
+            return Range(match.range(at: self.group), in: line)
         } else {
-            return Range(match.range, in: line)!
+            return Range(match.range, in: line)
         }
     }
     

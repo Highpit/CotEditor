@@ -9,7 +9,7 @@
 //  ---------------------------------------------------------------------------
 //
 //  © 2004-2007 nakamuxu
-//  © 2014-2019 1024jp
+//  © 2014-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -58,6 +58,8 @@ struct DefaultSettings {
         .showStatusBarEncoding: false,
         .showStatusBarLineEndings: false,
         .showStatusBarFileSize: true,
+        .windowWidth: 600.0,
+        .windowHeight: 620.0,
         .splitViewVertical: false,
         .writingDirection: 0,
         .overscrollRate: 0,
@@ -71,15 +73,12 @@ struct DefaultSettings {
         .highlightCurrentLine: false,
         .cursorType: CursorType.bar.rawValue,
         .showInvisibles: false,
-        .showInvisibleSpace: false,
-        .invisibleSpace: 0,
-        .showInvisibleTab: true,
-        .invisibleTab: 0,
         .showInvisibleNewLine: true,
-        .invisibleNewLine: 0,
-        .showInvisibleFullwidthSpace: false,
-        .invisibleFullwidthSpace: 0,
-        .showOtherInvisibleChars: false,
+        .showInvisibleTab: true,
+        .showInvisibleSpace: false,
+        .showInvisibleWhitespaces: true,
+        .showInvisibleControl: false,
+        .showIndentGuides: false,
         .documentAppearance: AppearanceMode.default.rawValue,
         .theme: "Dendrobates",
         
@@ -106,7 +105,6 @@ struct DefaultSettings {
         .lineEndCharCode: 0,
         .encodingList: DefaultSettings.encodings.map { UInt($0) },
         .encodingInNew: String.Encoding.utf8.rawValue,
-        .encodingInOpen: String.Encoding.autoDetection.rawValue,
         .saveUTF8BOM: false,
         .referToEncodingTag: true,
         .enableSyntaxHighlight: true,
@@ -131,7 +129,7 @@ struct DefaultSettings {
              FileDropComposer.SettingKey.formatString: "url(\"<<<RELATIVE-PATH>>>\")"],
         ],
         
-        .insertCustomTextArray: ["<br />\n", "", "", "", "", "", "", "", "", "", "",
+        .insertCustomTextArray: ["", "", "", "", "", "", "", "", "", "", "",
                                  "", "", "", "", "", "", "", "", "", "",
                                  "", "", "", "", "", "", "", "", "", ""],
         
@@ -139,8 +137,8 @@ struct DefaultSettings {
         .printFontName: (NSFont.userFont(ofSize: 0) ?? NSFont.systemFont(ofSize: 0)).fontName,
         .printFontSize: NSFont.systemFontSize,
         .printColorIndex: PrintColorMode.blackWhite.rawValue,
-        .printLineNumIndex: PrintLineNmuberMode.no.rawValue,
-        .printInvisibleCharIndex: PrintInvisiblesMode.no.rawValue,
+        .printLineNumIndex: PrintVisibilityMode.no.rawValue,
+        .printInvisibleCharIndex: PrintVisibilityMode.no.rawValue,
         .printHeader: true,
         .primaryHeaderContent: PrintInfoType.filePath.rawValue,
         .primaryHeaderAlignment: AlignmentType.left.rawValue,
@@ -173,6 +171,7 @@ struct DefaultSettings {
         // ------ settings not in preferences window ------
         .pinsThemeAppearance: false,
         .colorCodeType: 1,
+        .sidebarWidth: 220,
         .recentStyleNames: [],
         .showStatusBar: true,
         .selectedInspectorPaneIndex: 0,
@@ -191,7 +190,7 @@ struct DefaultSettings {
         .maximumRecentStyleCount: 6,
         .maximumSelectionInstanceHighlightCount: 100,
         .minimumLengthForNonContiguousLayout: 5_000_000,
-        ]
+    ]
     
     
     private init() { }

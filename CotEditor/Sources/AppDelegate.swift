@@ -9,7 +9,7 @@
 //  ---------------------------------------------------------------------------
 //
 //  © 2004-2007 nakamuxu
-//  © 2013-2019 1024jp
+//  © 2013-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     override init() {
         
         // register default setting values
-        let defaults = DefaultSettings.defaults.mapKeys { $0.rawValue }
+        let defaults = DefaultSettings.defaults.mapKeys(\.rawValue)
         UserDefaults.standard.register(defaults: defaults)
         NSUserDefaultsController.shared.initialValues = defaults
         
@@ -88,9 +88,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         
         // wake text finder up
         _ = TextFinder.shared
-        
-        // register transformers
-        ValueTransformer.setValueTransformer(HexColorTransformer(), forName: HexColorTransformer.name)
         
         super.init()
     }
@@ -130,10 +127,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     
     // MARK: Application Delegate
     
-    #if !APPSTORE
+    #if SPARKLE
     /// setup Sparkle framework
     func applicationWillFinishLaunching(_ notification: Notification) {
-    
+        
         UpdaterManager.shared.setup()
     }
     #endif
@@ -157,7 +154,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         
         // store the latest version
-        //   -> The bundle version (build number) must be Int.
+        // -> The bundle version (build number) must be Int.
         let thisVersion = Bundle.main.bundleVersion
         let isLatest: Bool = {
             guard
@@ -177,13 +174,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
         
         switch UserDefaults.standard[.noDocumentOnLaunchBehavior] {
-        case .untitledDocument:
-            return true
-        case .openPanel:
-            NSDocumentController.shared.openDocument(nil)
-            return false
-        case .none:
-            return false
+            case .untitledDocument:
+                return true
+            case .openPanel:
+                NSDocumentController.shared.openDocument(nil)
+                return false
+            case .none:
+                return false
         }
     }
     
@@ -297,20 +294,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     
     /// show standard about panel
     @IBAction func showAboutPanel(_ sender: Any?) {
-     
+        
         let creditsURL = Bundle.main.url(forResource: "Credits", withExtension: "html")!
         var html = try! String(contentsOf: creditsURL)
         
-        #if APPSTORE  // Remove Sparkle from 3rd party code list
+        #if !SPARKLE  // Remove Sparkle from 3rd party code list
         if let range = html.range(of: "Sparkle") {
-            html = html.replacingCharacters(in: html.lineRange(for: range), with: "")
+            html.replaceSubrange(html.lineRange(for: range), with: "")
         }
         #endif
-        
-        // inverse text color in dark mode
-        if #available(macOS 10.14, *), NSApp.effectiveAppearance.isDark {
-            html = html.replacingOccurrences(of: "<body>", with: "<body style=\"color: white\">")
-        }
         
         let attrString = NSAttributedString(html: html.data(using: .utf8)!, baseURL: creditsURL, documentAttributes: nil)!
         NSApplication.shared.orderFrontStandardAboutPanel(options: [.credits: attrString])
@@ -388,7 +380,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         
         // open as document
         guard let document = try? NSDocumentController.shared.openUntitledDocumentAndDisplay(false) as? Document else { return assertionFailure() }
-        document.displayName = "Bug Report".localized(comment: "document title")
+        document.displayName = "Issue Report".localized(comment: "document title")
         document.textStorage.replaceCharacters(in: NSRange(0..<0), with: report)
         document.setSyntaxStyle(name: BundledStyleName.markdown)
         document.makeWindowControllers()
@@ -435,7 +427,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     
     
     /// build theme menu in the main menu
-     @objc private func buildThemeMenu() {
+    @objc private func buildThemeMenu() {
         
         let menu = self.themesMenu!
         

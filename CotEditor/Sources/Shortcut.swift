@@ -9,7 +9,7 @@
 //  ---------------------------------------------------------------------------
 //
 //  © 2004-2007 nakamuxu
-//  © 2014-2019 1024jp
+//  © 2014-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -27,6 +27,9 @@
 import Foundation
 import AppKit.NSEvent
 
+/// Modifier keys for keyboard shortcut.
+///
+/// The order of cases (control, option, shift, and command) is determined in the HIG.
 enum ModifierKey: CaseIterable {
     
     case control
@@ -38,10 +41,10 @@ enum ModifierKey: CaseIterable {
     var mask: NSEvent.ModifierFlags {
         
         switch self {
-        case .control: return .control
-        case .option:  return .option
-        case .shift:   return .shift
-        case .command: return .command
+            case .control: return .control
+            case .option:  return .option
+            case .shift:   return .shift
+            case .command: return .command
         }
     }
     
@@ -50,10 +53,10 @@ enum ModifierKey: CaseIterable {
     var symbol: String {
         
         switch self {
-        case .control: return "^"
-        case .option:  return "⌥"
-        case .shift:   return "⇧"
-        case .command: return "⌘"
+            case .control: return "^"
+            case .option:  return "⌥"
+            case .shift:   return "⇧"
+            case .command: return "⌘"
         }
     }
     
@@ -62,10 +65,10 @@ enum ModifierKey: CaseIterable {
     var keySpecChar: String {
         
         switch self {
-        case .control: return "^"
-        case .option:  return "~"
-        case .shift:   return "$"
-        case .command: return "@"
+            case .control: return "^"
+            case .option:  return "~"
+            case .shift:   return "$"
+            case .command: return "@"
         }
     }
     
@@ -85,11 +88,10 @@ struct Shortcut: Hashable {
     init(modifierMask: NSEvent.ModifierFlags, keyEquivalent: String) {
         
         self.modifierMask = {
-            let modifierMask = modifierMask.intersection([.shift, .control, .option, .command])
+            let modifierMask = modifierMask.intersection([.control, .option, .shift, .command])
             
             // -> For in case that a modifierMask taken from a menu item can lack Shift definition if the combination is "Shift + alphabet character" keys.
-            if let keyEquivalentScalar = keyEquivalent.unicodeScalars.last,
-                CharacterSet.uppercaseLetters.contains(keyEquivalentScalar) {
+            if keyEquivalent.last?.isUppercase == true {
                 return modifierMask.union(.shift)
             }
             
@@ -109,8 +111,8 @@ struct Shortcut: Hashable {
         
         let modifierCharacters = keySpecChars.dropLast()
         let modifierMask = ModifierKey.allCases
-            .filter { key in modifierCharacters.contains(key.keySpecChar) }
-            .reduce(into: NSEvent.ModifierFlags()) { (mask, key) in mask.formUnion(key.mask) }
+            .filter { modifierCharacters.contains($0.keySpecChar) }
+            .reduce(into: NSEvent.ModifierFlags()) { $0.formUnion($1.mask) }
         
         self.init(modifierMask: modifierMask, keyEquivalent: String(keyEquivalent))
     }
@@ -121,21 +123,21 @@ struct Shortcut: Hashable {
         
         let modifierCharacters = ModifierKey.allCases
             .filter { self.modifierMask.contains($0.mask) }
-            .map { $0.keySpecChar }
+            .map(\.keySpecChar)
             .joined()
         
         return modifierCharacters + self.keyEquivalent
     }
     
     
-    /// whether is empty
+    /// whether the shortcut key is empty
     var isEmpty: Bool {
         
         return self.keyEquivalent.isEmpty && self.modifierMask.isEmpty
     }
     
     
-    /// whether key combination is valid for a shortcut
+    /// Whether key combination is valid for a shortcut.
     ///
     /// - Note: An empty shortcut is marked as invalid.
     var isValid: Bool {
@@ -164,7 +166,7 @@ struct Shortcut: Hashable {
         
         return ModifierKey.allCases
             .filter { self.modifierMask.contains($0.mask) }
-            .map { $0.symbol }
+            .map(\.symbol)
             .joined()
     }
     
@@ -183,7 +185,7 @@ struct Shortcut: Hashable {
     
     
     /// table for characters that cannot be displayed as is with their printable substitutions
-    private static let printableKeyEquivalents: [UnicodeScalar: String] = [
+    private static let printableKeyEquivalents: [Unicode.Scalar: String] = [
         NSUpArrowFunctionKey: "↑",
         NSDownArrowFunctionKey: "↓",
         NSLeftArrowFunctionKey: "←",
@@ -218,7 +220,7 @@ struct Shortcut: Hashable {
         0x03: "⌅",  // = Enter
         0x31: "⇤",  // = Backtab
         0x1b: "⎋",  // = Escape
-        ].mapKeys { UnicodeScalar($0)! }
+        ].mapKeys { Unicode.Scalar($0)! }
     
 }
 

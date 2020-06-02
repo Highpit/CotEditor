@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2016-2019 1024jp
+//  © 2016-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@ enum ScriptingFileType: CaseIterable {
     var extensions: [String] {
         
         switch self {
-        case .appleScript: return ["applescript", "scpt", "scptd"]
-        case .unixScript: return ["sh", "pl", "php", "rb", "py", "js", "swift"]
+            case .appleScript: return ["applescript", "scpt", "scptd"]
+            case .unixScript: return ["sh", "pl", "php", "rb", "py", "js", "swift"]
         }
     }
     
@@ -60,8 +60,8 @@ enum ScriptingEventType: String, Decodable {
     var eventID: AEEventID {
         
         switch self {
-        case .documentOpened: return AEEventID(code: "edod")
-        case .documentSaved: return AEEventID(code: "edsd")
+            case .documentOpened: return AEEventID(code: "edod")
+            case .documentSaved: return AEEventID(code: "edsd")
         }
     }
     
@@ -123,9 +123,7 @@ struct ScriptDescriptor {
         
         self.url = url
         self.type = ScriptingFileType.allCases.first { $0.extensions.contains(url.pathExtension) }
-        var name = url.deletingPathExtension().lastPathComponent.immutable
-        // -> `.immutable` is a workaround for NSPathStore2 bug (2019-10 Xcode 11.1)
-        
+        var name = url.deletingPathExtension().lastPathComponent
         let shortcut = Shortcut(keySpecChars: url.deletingPathExtension().pathExtension)
         if shortcut.modifierMask.isEmpty {
             self.shortcut = .none
@@ -133,8 +131,7 @@ struct ScriptDescriptor {
             self.shortcut = shortcut
             
             // remove the shortcut specification from the script name
-            // -> `.immutable` is a workaround for NSPathStore2 bug (2019-10 Xcode 11.1)
-            name = URL(fileURLWithPath: name).deletingPathExtension().lastPathComponent.immutable
+            name = URL(fileURLWithPath: name).deletingPathExtension().lastPathComponent
         }
         
         if let range = name.range(of: "^[0-9]+\\)", options: .regularExpression) {
@@ -142,7 +139,7 @@ struct ScriptDescriptor {
             let orderingString = name[..<name.index(before: range.upperBound)]
             self.ordering = Int(orderingString)
             
-            // Remove the ordering number from the script name
+            // remove the ordering number from the script name
             name.removeSubrange(range)
         } else {
             self.ordering = nil
@@ -160,21 +157,20 @@ struct ScriptDescriptor {
     
     // MARK: Public Methods
     
-    /// Create and return an user script instance
+    /// Create and return an user script instance.
     ///
     /// - Returns: An instance of `Script` created by the receiver.
     ///            Returns `nil` if the script type is unsupported.
     func makeScript() -> Script? {
         
-        guard let type = self.type else { return nil }
-        
-        switch type {
-        case .appleScript:
-            switch self.executionModel {
-            case .unrestricted: return AppleScript(descriptor: self)
-            case .persistent: return PersistentOSAScript(descriptor: self)
+        switch self.type {
+            case .appleScript:
+                switch self.executionModel {
+                    case .unrestricted: return AppleScript(descriptor: self)
+                    case .persistent: return PersistentOSAScript(descriptor: self)
             }
-        case .unixScript: return UnixScript(descriptor: self)
+            case .unixScript: return UnixScript(descriptor: self)
+            case .none: return nil
         }
     }
     

@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2014-2019 1024jp
+//  © 2014-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -30,9 +30,6 @@ import Cocoa
     func insertUnicodeCharacter(_ sender: UnicodeInputViewController)
 }
 
-
-
-// MARK: -
 
 final class UnicodeInputViewController: NSViewController, NSTextFieldDelegate {
     
@@ -63,17 +60,28 @@ final class UnicodeInputViewController: NSViewController, NSTextFieldDelegate {
     }
     
     
-    override func viewDidLoad() {
+    override func viewWillAppear() {
         
-        super.viewDidLoad()
+        super.viewWillAppear()
         
+        if let observer = self.windowObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
         self.windowObserver = NotificationCenter.default.addObserver(forName: NSWindow.didResignMainNotification, object: nil, queue: .main) { [unowned self] _ in
-            guard
-                NSApp.isActive,
-                NSDocumentController.shared.documents.count <= 1  // The 1 is the document now resigning.
-                else { return }
+            guard NSDocumentController.shared.documents.count <= 1 else { return }  // The 1 is the document now resigning.
             
             self.view.window?.performClose(self)
+        }
+    }
+    
+    
+    override func viewDidDisappear() {
+        
+        super.viewDidDisappear()
+        
+        if let observer = self.windowObserver {
+            NotificationCenter.default.removeObserver(observer)
+            self.windowObserver = nil
         }
     }
     
@@ -90,17 +98,15 @@ final class UnicodeInputViewController: NSViewController, NSTextFieldDelegate {
         
         guard
             let input = (obj.object as? NSTextField)?.stringValue,
-            let longChar = UInt32(codePoint: input)
+            let longChar = UTF32.CodeUnit(codePoint: input)
             else { return }
         
         self.unicodeName = longChar.unicodeName
         
-        guard let scalar = UnicodeScalar(longChar) else { return }
+        guard let scalar = Unicode.Scalar(longChar) else { return }
         
         self.isValid = true
-        
-        // -> Workaround that Swift 5 omits U+FEFF at the beginning. (2019-06 macOS 10.14)
-        self.characterString = (scalar == UnicodeScalar("\u{feff}")) ? "\u{feff}\u{feff}" : String(scalar)
+        self.characterString = String(scalar)
     }
     
     
@@ -112,9 +118,8 @@ final class UnicodeInputViewController: NSViewController, NSTextFieldDelegate {
         
         guard self.characterString?.isEmpty == false else { return }
         
-        guard let receiver = NSApp.target(forAction: #selector(UnicodeInputReceiver.insertUnicodeCharacter(_:))) as? UnicodeInputReceiver else {
-            NSSound.beep()
-            return
+        guard let receiver = NSApp.target(forAction: #selector(UnicodeInputReceiver.insertUnicodeCharacter)) as? UnicodeInputReceiver else {
+            return NSSound.beep()
         }
         
         receiver.insertUnicodeCharacter(self)
@@ -131,7 +136,7 @@ final class UnicodeInputViewController: NSViewController, NSTextFieldDelegate {
 
 // MARK: Private Methods
 
-private extension UInt32 {
+private extension UTF32.CodeUnit {
     
     /// initialize from a possible Unicode code point representation like `U+1F600`, `1f600`, `0x1F600` and so on.
     init?(codePoint: String) {

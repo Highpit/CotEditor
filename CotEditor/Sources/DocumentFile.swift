@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2018-2019 1024jp
+//  © 2018-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -31,12 +31,10 @@ extension FileAttributeKey {
 }
 
 
-struct FileExtendedAttributeName {
+enum FileExtendedAttributeName {
     
     static let encoding = "com.apple.TextEncoding"
     static let verticalText = "com.coteditor.VerticalText"
-    
-    private init() { }
 }
 
 
@@ -65,7 +63,7 @@ struct DocumentFile {
     
     init(fileURL: URL, readingEncoding: String.Encoding, defaults: UserDefaults = .standard) throws {
         
-        let data = try Data(contentsOf: fileURL)  // FILE_READ
+        let data = try Data(contentsOf: fileURL, options: [.mappedIfSafe])  // FILE_READ
         let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)  // FILE_READ
         
         // check extended attributes
@@ -77,16 +75,19 @@ struct DocumentFile {
         let content: String
         let encoding: String.Encoding
         switch readingEncoding {
-        case .autoDetection:
-            (content, encoding) = try Self.string(data: data, xattrEncoding: self.xattrEncoding,
-                                                  suggestedCFEncodings: defaults[.encodingList],
-                                                  refersToEncodingTag: defaults[.referToEncodingTag])
-        default:
-            encoding = readingEncoding
-            if !data.isEmpty {
-                content = try String(contentsOf: fileURL, encoding: encoding)  // FILE_READ
-            } else {
-                content = ""
+            case .autoDetection:
+                (content, encoding) = try Self.string(data: data, xattrEncoding: self.xattrEncoding,
+                                                      suggestedCFEncodings: defaults[.encodingList],
+                                                      refersToEncodingTag: defaults[.referToEncodingTag])
+            default:
+                encoding = readingEncoding
+                if !data.isEmpty {
+                    guard let string = String(bomCapableData: data, encoding: encoding) else {
+                        throw CocoaError.error(.fileReadInapplicableStringEncoding, userInfo: [NSStringEncodingErrorKey: encoding.rawValue], url: fileURL)
+                    }
+                    content = string
+                } else {
+                    content = ""
             }
         }
         
@@ -95,7 +96,7 @@ struct DocumentFile {
         self.attributes = attributes
         self.string = content
         self.encoding = encoding
-        self.hasUTF8BOM = (encoding == .utf8) && data.hasUTF8BOM
+        self.hasUTF8BOM = (encoding == .utf8) && data.starts(with: Unicode.BOM.utf8.sequence)
         self.lineEnding = content.detectedLineEnding
     }
     

@@ -9,7 +9,7 @@
 //  ---------------------------------------------------------------------------
 //
 //  © 2004-2007 nakamuxu
-//  © 2014-2019 1024jp
+//  © 2014-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -57,8 +57,8 @@ final class EncodingManager: NSObject {
         
         super.init()
         
-        // UserDefaults.standard[.encodingList] can be empty if the user's list contains negative values.
-        //   -> It seems to be possible if the setting was made long time ago (2018-01 CotEditor 3.3.0)
+        // -> UserDefaults.standard[.encodingList] can be empty if the user's list contains negative values.
+        //    It seems to be possible if the setting was made a long time ago. (2018-01 CotEditor 3.3.0)
         if UserDefaults.standard[.encodingList].isEmpty {
             self.sanitizeEncodingListSetting()
         }
@@ -80,14 +80,8 @@ final class EncodingManager: NSObject {
     /// return user's encoding priority list
     var defaultEncodings: [String.Encoding?] {
         
-        let cfEncodings = UserDefaults.standard[.encodingList]
-        
-        return cfEncodings.map { cfEncoding in
-            if cfEncoding == kCFStringEncodingInvalidId {
-                return nil
-            }
-            return String.Encoding(cfEncoding: cfEncoding)
-        }
+        return UserDefaults.standard[.encodingList]
+            .map { $0 != kCFStringEncodingInvalidId ? String.Encoding(cfEncoding: $0) : nil }
     }
     
     
@@ -130,7 +124,7 @@ final class EncodingManager: NSObject {
             
             // add "UTF-8 with BOM" item just after the normal UTF-8
             if item.tag == UTF8Tag {
-                let bomItem = NSMenuItem(title: String.localizedNameOfUTF8EncodingWithBOM,
+                let bomItem = NSMenuItem(title: String.localizedName(of: .utf8, withUTF8BOM: true),
                                          action: #selector(EncodingHolder.changeEncoding),
                                          keyEquivalent: "")
                 bomItem.tag = -UTF8Tag  // negative value is sign for "with BOM"

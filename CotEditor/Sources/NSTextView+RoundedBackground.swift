@@ -41,8 +41,8 @@ extension NSTextView {
         // avoid invoking heavy-duty `range(for:)` as possible
         guard
             let layoutManager = self.layoutManager,
-            let dirtyRange = self.range(for: dirtyRect, withoutAdditionalLayout: true),
-            layoutManager.hasTemporaryAttribute(for: .roundedBackgroundColor, in: dirtyRange)
+            let dirtyRange = self.range(for: dirtyRect),
+            layoutManager.hasTemporaryAttribute(.roundedBackgroundColor, in: dirtyRange)
             else { return }
         
         NSGraphicsContext.saveGraphicsState()
@@ -69,10 +69,10 @@ extension NSTextView {
         return rects.map { rect in
             let corners: RectCorner = {
                 switch rect {
-                case _ where rects.count == 1: return .allCorners
-                case rects.first:              return [.topLeft, .bottomLeft]
-                case rects.last:               return [.topRight, .bottomRight]
-                default:                       return []
+                    case _ where rects.count == 1: return .allCorners
+                    case rects.first:              return [.topLeft, .bottomLeft]
+                    case rects.last:               return [.topRight, .bottomRight]
+                    default:                       return []
                 }
             }()
             let radius = rect.height / 4

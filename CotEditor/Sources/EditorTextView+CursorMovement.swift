@@ -8,7 +8,7 @@
 //
 //  ---------------------------------------------------------------------------
 //
-//  © 2019 1024jp
+//  © 2019-2020 1024jp
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -184,7 +184,7 @@ extension EditorTextView {
         guard self.hasMultipleInsertions else { return super.moveParagraphBackwardAndModifySelection(sender) }
         
         self.moveCursorsAndModifySelection(forward: false, affinity: .downstream) {
-            (self.string as NSString).lineRange(at: self.string.index(before: $0)).lowerBound
+            (self.string as NSString).lineStartIndex(at: self.string.index(before: $0))
         }
     }
     
@@ -195,7 +195,7 @@ extension EditorTextView {
         guard self.hasMultipleInsertions else { return super.moveParagraphForwardAndModifySelection(sender) }
         
         self.moveCursorsAndModifySelection(forward: true, affinity: .upstream) {
-            (self.string as NSString).lineContentsRange(at: self.string.index(after: $0)).upperBound
+            (self.string as NSString).lineContentsEndIndex(at: self.string.index(after: $0))
         }
     }
     
@@ -230,7 +230,7 @@ extension EditorTextView {
         let cursor = isLowerOrigin ? currentRange.upperBound : currentRange.lowerBound
         let origin = isLowerOrigin ? currentRange.lowerBound : currentRange.upperBound
         
-        //  skip modifiying selection in RTL text as it is too complex
+        //  skip modifying the selection in RTL text as it is too complex
         // -> Additional word boundaries may be not so nessessory in RTL text.
         guard !self.layoutManager!.isRTL(at: cursor) else { return }
         
@@ -272,7 +272,7 @@ extension EditorTextView {
             // repeat `moveBackwardAndModifySelection(_:)` until reaching to the goal location,
             // instead of setting `selectedRange` directly.
             // -> To avoid an issue that changing selection by shortcut ⇧→ just after this command
-            //    expands the selection to a wrong direction. (2018-11 macOS 10.14 #863)
+            //    expands the selection to the wrong direction. (2018-11 macOS 10.14 #863)
             while self.selectedRange.location > location {
                 self.moveBackwardAndModifySelection(self)
             }
@@ -364,7 +364,7 @@ extension EditorTextView {
         guard self.hasMultipleInsertions else { return super.moveToBeginningOfParagraph(sender) }
         
         self.moveCursors(affinity: .downstream) {
-            (self.string as NSString).lineRange(at: $0.lowerBound).lowerBound
+            (self.string as NSString).lineStartIndex(at: $0.lowerBound)
         }
     }
     
@@ -375,7 +375,7 @@ extension EditorTextView {
         guard self.hasMultipleInsertions else { return super.moveToBeginningOfParagraphAndModifySelection(sender) }
         
         self.moveCursorsAndModifySelection(forward: false, affinity: .downstream) {
-            (self.string as NSString).lineRange(at: $0).lowerBound
+            (self.string as NSString).lineStartIndex(at: $0)
         }
     }
     
@@ -388,7 +388,7 @@ extension EditorTextView {
         guard self.hasMultipleInsertions else { return super.moveToEndOfParagraph(sender) }
         
         self.moveCursors(affinity: .upstream) {
-            (self.string as NSString).lineContentsRange(at: $0.upperBound).upperBound
+            (self.string as NSString).lineContentsEndIndex(at: $0.upperBound)
         }
     }
     
@@ -399,7 +399,7 @@ extension EditorTextView {
         guard self.hasMultipleInsertions else { return super.moveToEndOfParagraphAndModifySelection(sender) }
         
         self.moveCursorsAndModifySelection(forward: true, affinity: .upstream) {
-            (self.string as NSString).lineContentsRange(at: $0).upperBound
+            (self.string as NSString).lineContentsEndIndex(at: $0)
         }
     }
     
@@ -510,18 +510,18 @@ extension EditorTextView {
             else { return false }
         
         switch (Int(character), self.layoutOrientation) {
-        case (NSUpArrowFunctionKey, .horizontal),
-             (NSRightArrowFunctionKey, .vertical):
-            self.doCommand(by: #selector(selectColumnUp))
-            return true
+            case (NSUpArrowFunctionKey, .horizontal),
+                 (NSRightArrowFunctionKey, .vertical):
+                self.doCommand(by: #selector(selectColumnUp))
+                return true
             
-        case (NSDownArrowFunctionKey, .horizontal),
-             (NSLeftArrowFunctionKey, .vertical):
-            self.doCommand(by: #selector(selectColumnDown))
-            return true
+            case (NSDownArrowFunctionKey, .horizontal),
+                 (NSLeftArrowFunctionKey, .vertical):
+                self.doCommand(by: #selector(selectColumnDown))
+                return true
             
-        default:
-             return false
+            default:
+                return false
         }
     }
     
@@ -554,8 +554,7 @@ extension EditorTextView {
         
         guard self.hasMultipleInsertions else { return super.deleteForward(sender) }
         
-        self.moveForwardAndModifySelection(sender)
-        self.deleteBackward(sender)
+        guard self.multipleDelete(forward: true) else { return super.deleteForward(sender) }
     }
     
     
@@ -657,10 +656,12 @@ private extension NSAttributedString {
         assert(location >= 0)
         assert(location <= self.length)
         
-        guard (isForward && location < self.length) || (!isForward && location > 0) else  { return location }
+        guard (isForward && location < self.length) || (!isForward && location > 0) else { return location }
         
-        let nextIndex = self.nextWord(from: location, forward: isForward)
-
+        let rawNextIndex = self.nextWord(from: location, forward: isForward)
+        let characterRange = (self.string as NSString).rangeOfComposedCharacterSequence(at: rawNextIndex)
+        let nextIndex = isForward ? characterRange.upperBound : characterRange.lowerBound
+        
         let options: NSString.CompareOptions = isForward ? [.literal] : [.literal, .backwards]
         let range = isForward ? (location + 1)..<nextIndex : nextIndex..<(location - 1)
         let trimmedRange = (self.string as NSString).rangeOfCharacter(from: delimiters, options: options, range: NSRange(range))
